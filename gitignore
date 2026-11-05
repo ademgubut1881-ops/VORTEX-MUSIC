@@ -1,0 +1,41 @@
+# --- GİZLİ ANAHTARLAR: ASLA GitHub'a gitmemeli ---
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+keystore.properties
+key.properties
+signing.properties
+local.properties
+google-services.json
+
+# --- Derleme çıktıları ---
+build/
+.gradle/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+
+# --- Yedekler ve kişisel dosyalar ---
+*.bak
+*.backup
+vortex_backup*.json
+backup*.json
+*.log
+
+# --- IDE ve sistem dosyaları ---
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+.externalNativeBuild/
+.cxx/
+.codeassist/
