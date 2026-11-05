@@ -34,3 +34,24 @@ Katkı
 Hata bildirimleri ve fikirler memnuniyetle karşılanır. Bir issue aç, ne olduğunu, telefon modelini ve Android sürümünü yaz.
 Lisans
 GPL-3.0 lisansı ile yayınlanmıştır. LICENSE dosyasına bak.
+
+
+## Screenshots
+
+### 01 — Vortex Music
+![Vortex Music](01-hero.png)
+
+### 02 — Sound
+![Sound](02-sound.png)
+
+### 03 — Statistics
+![Statistics](03-stats.png)
+
+### 04 — Appearance
+![Appearance](04-appearance.png)
+
+### 05 — Music Library
+![Music Library](05-library.png)
+
+### 06 — Tools
+![Tools](06-tools.png)
