@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#9B7BFF</color>
+    <color name="ic_launcher_background">#070B18</color>
+    <color name="vortex_background">#070B18</color>
+    <color name="vortex_background_end">#101A3A</color>
+    <color name="vortex_surface">#131B3A</color>
+    <color name="vortex_surface_light">#1C2650</color>
+    <color name="vortex_purple">#9B7BFF</color>
+    <color name="vortex_blue">#4DB8FF</color>
+    <color name="vortex_text">#EEF0FF</color>
+    <color name="vortex_text_secondary">#9AA3C7</color>
+</resources>
