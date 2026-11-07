@@ -68,13 +68,3 @@ Bug reports and ideas are welcome. Open an [issue](../../issues) and include wha
 ## License
 
 Released under the GPL-3.0 license. See [LICENSE](LICENSE).
-<p align="center"><img src="docs/screenshots/en/01-hero.png" alt="Vortex Music"></p>
-
-<p align="center"><img src="docs/screenshots/en/02-sound.png" alt="Equalizer, effects and auto EQ profiles"></p>
-<p align="center"><img src="docs/screenshots/en/03-stats.png" alt="Listening stats"></p>
-<p align="center"><img src="docs/screenshots/en/04-appearance.png" alt="Themes and appearance"></p>
-<p align="center"><img src="docs/screenshots/en/05-library.png" alt="Sorting and layouts"></p>
-<p align="center"><img src="docs/screenshots/en/06-tools.png" alt="Built-in tools"></p>
-
-
-
