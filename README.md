@@ -76,5 +76,5 @@ Released under the GPL-3.0 license. See [LICENSE](LICENSE).
 <p align="center"><img src="docs/screenshots/en/05-library.png" alt="Sorting and layouts"></p>
 <p align="center"><img src="docs/screenshots/en/06-tools.png" alt="Built-in tools"></p>
 
-<!-- README.tr.md: aynısı, sadece en yerine tr yaz -->
+
 
