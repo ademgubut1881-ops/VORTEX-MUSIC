@@ -1,11 +1,3 @@
-<p align="center">
-  <img src="docs/screenshots/en/01-hero.png" alt="Vortex Music" width="100%">
-</p>
-
-<p align="center">
-  <b>English</b> · <a href="README.tr.md">Türkçe</a>
-</p>
-
 # Vortex Music
 
 A free, open-source Android music player for **your own music files**.
@@ -14,15 +6,7 @@ No ads, no account, no tracking. It works fully offline and doesn't even ask for
 [**Download the latest beta**](../../releases) · [Report a bug](../../issues)
 
 > **Status:** Beta. The app interface is currently in Turkish. English, French, German and Italian are planned for Beta 2.
-
-## Screenshots
-
-<p align="center"><img src="docs/screenshots/en/02-sound.png" alt="Equalizer, effects and automatic EQ profiles" width="100%"></p>
-<p align="center"><img src="docs/screenshots/en/03-stats.png" alt="Listening statistics" width="100%"></p>
-<p align="center"><img src="docs/screenshots/en/04-appearance.png" alt="Themes and appearance" width="100%"></p>
-<p align="center"><img src="docs/screenshots/en/05-library.png" alt="Sorting and layouts" width="100%"></p>
-<p align="center"><img src="docs/screenshots/en/06-tools.png" alt="Built-in tools" width="100%"></p>
-
+> 
 ## Features
 
 - **Plays your own files**, with media notification and lock screen controls
