@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.App" parent="android:Theme.Material.NoActionBar">
+        <!-- Üst barı ve başlığı tamamen kapatan kesin garantili bayraklar -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        
+        <item name="android:windowBackground">@color/vortex_background</item>
+        <item name="android:colorPrimary">@color/vortex_purple</item>
+        <item name="android:colorAccent">@color/vortex_blue</item>
+        <item name="android:statusBarColor">@color/vortex_background</item>
+        <item name="android:navigationBarColor">@color/vortex_background</item>
+        <item name="android:textColorPrimary">@color/vortex_text</item>
+        <item name="android:textColorSecondary">@color/vortex_text_secondary</item>
+    </style>
+</resources>
