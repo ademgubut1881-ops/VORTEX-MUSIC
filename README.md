@@ -1,115 +1,131 @@
+<p align="center">
+  <img src="docs/screenshots/en/01-hero.png" alt="Vortex Music" width="100%">
+</p>
+
+<p align="center">
+  <b>English</b> · <a href="#türkçe">Türkçe</a>
+</p>
+
 # Vortex Music
 
-A free and open-source music player for Android that plays the music already on your phone.
-No account, no ads, no tracking, and no internet permission.
+A free, open-source Android music player for **your own music files**.
+No ads, no account, no tracking. It works fully offline and doesn't even ask for internet permission.
 
-> **Status: beta (1.0.0-beta.1).** The interface is currently in Turkish only. An English translation is planned.
+[**Download the latest beta**](../../releases) · [Report a bug](../../issues)
 
-## Why Vortex
+> **Status:** Beta. The app interface is currently in Turkish. English, French, German and Italian are planned for Beta 2.
 
-- **Private by design.** Everything stays on your phone. The app does not request the INTERNET permission at all.
-- **Made for people who care about their library.** Sort, group and arrange your songs the way you like, and the order only lives inside the app. Your files are never touched.
-- **Sound you can shape.** An equalizer you adjust by dragging points on a curve, profiles that switch automatically when your headphones connect, and more.
+## Screenshots
+
+<p align="center"><img src="docs/screenshots/en/02-sound.png" alt="Equalizer, effects and automatic EQ profiles" width="100%"></p>
+<p align="center"><img src="docs/screenshots/en/03-stats.png" alt="Listening statistics" width="100%"></p>
+<p align="center"><img src="docs/screenshots/en/04-appearance.png" alt="Themes and appearance" width="100%"></p>
+<p align="center"><img src="docs/screenshots/en/05-library.png" alt="Sorting and layouts" width="100%"></p>
+<p align="center"><img src="docs/screenshots/en/06-tools.png" alt="Built-in tools" width="100%"></p>
 
 ## Features
 
-**Library**
-- Songs, artists, albums, folders, favorites and smart lists (most played, recently added, never played, forgotten songs)
-- Add your own cover image to any album
-- Group all songs of an artist into one album, or use the album names stored in your files
-- 14 sort options, list and grid layouts, "titles only" mode, and manual ordering with up/down controls (per list, stored only in the app)
-- Duplicate file finder with safe deletion (Android 11 and later)
-
-**Playback**
-- Background playback with notification controls (tapping the notification opens the app)
-- Queue screen: reorder, remove, "play next", "add to queue"
-- Shuffle, repeat, speed control (0.75x to 1.5x) with an optional pitch-linked "vinyl" mode
-- Smooth fade-in, and the app remembers your last queue and position
-- The now-playing screen takes its colors from the current cover art
-
-**Sound**
-- Equalizer with a draggable curve, presets, bass boost, loudness and virtual surround
-- Save your settings as profiles, export and import them as files
-- Automatic profile switching when a Bluetooth or wired headphone connects
-
-**Search**
-- Search that ignores case and diacritics (typing "sezen" finds "Şezen")
-- Search by song, artist or album, with sorting and recent searches
-
-**Your listening**
-- Statistics: total time, daily curve, artist share, hours of the day, top songs (kept only on your phone)
-
-**Lyrics**
-- Import `.lrc` or `.txt` files, or paste lyrics. Synced lyrics highlight line by line as the song plays and you can tap a line to jump to it
-
-**Appearance**
-- System, light or dark mode
-- Color schemes (Vortex, Midnight / First Snow, and several more), a dynamic scheme on Android 12 and later, optional blurred color glow and neon lines
-
-**Backup**
-- Backup and restore of your favorites, folders, lyrics, covers, orders and settings (made for restoring on the same phone)
-
-## Install
-
-1. Download the latest APK from the [Releases](https://github.com/<kullanici-adin>/<depo-adi>/releases) page.
-2. Allow installing from your browser or file manager when Android asks.
-3. Open Vortex and grant the music permission.
-
-**Requirements:** Android 8.0 (API 26) or later. Duplicate deletion needs Android 11+, dynamic colors need Android 12+.
-
-**Updating:** Releases are all signed with the same key, so a new APK installs over the old one and keeps your data. To get notified automatically, add this repository to [Obtainium](https://github.com/ImranR98/Obtainium): open Obtainium, choose "Add app", paste the repository address and Vortex will be tracked from the Releases page.
+- **Plays your own files**, with media notification and lock screen controls
+- **Equalizer:** draggable 5-band curve, presets, bass boost, loudness boost and virtual surround
+- **Automatic EQ:** save profiles and have them applied automatically when headphones or a Bluetooth device connects
+- **Listening statistics:** today, this week, this month and all time, all calculated on your device
+- **Appearance:** light, dark or system mode, many color schemes, dynamic colors on Android 12+, optional blur and neon lines
+- **Library control:** many sort modes, six list and grid layouts, manual ordering that never touches your files
+- **Duplicate finder** that locates multiple copies of the same song
+- **Backup and restore** for likes, folders, covers and sorting
+- **Remembers where you left off** when the app is closed
 
 ## Privacy
 
-Vortex does not collect, send or share any data. It has no internet access, no analytics and no ads.
+- No internet permission, no ads, no analytics, no account
+- Your statistics and settings stay on your device
+- The app only asks for what it needs: access to your music files, and optionally Bluetooth permission to read the output device name (for automatic EQ)
 
-Permissions it asks for, and why:
+## Install
 
-| Permission | Why |
-|---|---|
-| Music and audio (`READ_MEDIA_AUDIO`, or `READ_EXTERNAL_STORAGE` on Android 12 and below) | To list and play your songs |
-| Notifications | To show the playback controls |
-| Foreground service (media playback), wake lock | To keep playing when the screen is off |
-| Bluetooth connect | To read the name of your headphones, so a saved sound profile can switch automatically |
+1. Open the [Releases](../../releases) page.
+2. Download the `.apk` file under the latest release.
+3. Open it on your phone. Android may ask you to allow installing from your browser or file manager.
 
-Backup files are created only when you ask for them, and you choose where they are saved.
+### Automatic updates with Obtainium
 
-## Build from source
+[Obtainium](https://github.com/ImranR98/Obtainium) is a free app that tracks apps on GitHub and notifies you when a new version is released.
 
-Vortex was written entirely on a phone with the [CodeAssist](https://github.com/tyron12233/CodeAssist) IDE.
-
-- Language: Kotlin, classic Android Views (no Compose)
-- Player: AndroidX Media3 (ExoPlayer and MediaSession)
-- Package: `io.github.vortexmusic.player`, minSdk 26, targetSdk 36
-
-You can import the project folder into CodeAssist. CodeAssist can also export a project as a Gradle build. That path has not been tested with this project yet.
-
-**About signing:** Official releases are signed with the maintainer's private key, which is not part of this repository. If you build the app yourself, sign it with your own key. An APK signed with a different key cannot be installed over an official release and the other way round.
-
-## Known issues
-
-- The interface is Turkish only for now.
-- The equalizer uses the effects built into Android. The strength of the bass, loudness and surround effects depends on your phone brand and headphones, and the equalizer has the bands (usually 5) and fixed frequencies your phone provides.
-- Editing song tags (title, artist, album) is not available yet.
-- Backups are meant to be restored on the same phone, because they refer to songs by the numbers Android assigns to them.
+1. Install and open Obtainium.
+2. In **Add app**, paste this repository's address (the address of this page in your browser).
+3. Releases are currently **pre-releases (beta)**, so turn on **Include prereleases** on the add screen.
+4. Tap **Add**. When a new version comes out, Obtainium tells you and you update with one tap.
 
 ## Roadmap
 
-- English translation
-- An About screen and a "What's new" screen after updates
-- A glass-style look
-- Tag editing
-
-Plans can change. Ideas and bug reports are welcome, please open an issue.
+- **Beta 2:** English, French, German and Italian translations, lyrics, downloads, an About and What's new screen, more theme options
+- **Later:** tag editing, more features
 
 ## Contributing
 
-Open an issue to report a bug or suggest a feature. For code changes, open a pull request and describe what it does and how you tested it.
+Bug reports and ideas are welcome. Open an [issue](../../issues) and include what happened, your phone model and your Android version.
 
-## License and credits
+## License
 
-Vortex Music is licensed under the **GNU General Public License v3.0** (see `LICENSE`).
+Released under the GPL-3.0 license. See [LICENSE](LICENSE).
 
-It uses [AndroidX Media3](https://developer.android.com/media/media3), which is licensed under the Apache License 2.0.
+---
 
-The app logo was generated with the help of AI.
+## Türkçe
+
+<p align="center">
+  <img src="docs/screenshots/01-hero.png" alt="Vortex Music" width="100%">
+</p>
+
+
+**Kendi müzik dosyaların** için ücretsiz, açık kaynaklı bir Android müzik çalar.
+Reklam yok, hesap yok, takip yok. Tamamen çevrimdışı çalışır, internet iznini bile istemez.
+
+> **Durum:** Beta. Uygulama şimdilik Türkçe. İngilizce, Fransızca, Almanca ve İtalyanca Beta 2 için planlandı.
+
+### Ekran görüntüleri
+
+<p align="center"><img src="docs/screenshots/02-sound.png" alt="Ekolayzır, efektler ve otomatik EQ profilleri" width="100%"></p>
+<p align="center"><img src="docs/screenshots/03-stats.png" alt="Dinleme istatistikleri" width="100%"></p>
+<p align="center"><img src="docs/screenshots/04-appearance.png" alt="Temalar ve görünüm" width="100%"></p>
+<p align="center"><img src="docs/screenshots/05-library.png" alt="Sıralama ve görünümler" width="100%"></p>
+<p align="center"><img src="docs/screenshots/06-tools.png" alt="Hazır araçlar" width="100%"></p>
+
+### Özellikler
+
+- **Kendi dosyalarını çalar**, medya bildirimi ve kilit ekranı kontrolleriyle
+- **Ekolayzır:** 5 bantlı sürüklenebilir eğri, hazır ayarlar, bas güçlendirici, ses yükseltme ve sanal surround
+- **Otomatik EQ:** profillerini kaydet, kulaklık ya da Bluetooth cihazı bağlanınca kendiliğinden uygulansın
+- **Dinleme istatistikleri:** bugün, hafta, ay ve tüm zamanlar, hepsi cihazında hesaplanır
+- **Görünüm:** açık, koyu ya da sistem modu, çok sayıda renk şeması, Android 12+ için dinamik renkler, isteğe bağlı bulanık renk ve neon çizgileri
+- **Kitaplık kontrolü:** çok sayıda sıralama, altı liste ve ızgara görünümü, dosyalarına dokunmayan elle sıralama
+- Aynı şarkının birden fazla kopyasını bulan **yinelenen dosya aracı**
+- Beğeniler, klasörler, kapaklar ve sıralamayı **yedekleme ve geri yükleme**
+- Uygulama kapanınca **kaldığın yeri hatırlar**
+
+### Gizlilik
+
+- İnternet izni yok, reklam yok, analiz yok, hesap yok
+- İstatistiklerin ve ayarların cihazında kalır
+- Uygulama sadece gerekeni ister: müzik dosyalarına erişim ve isteğe bağlı olarak çıkış cihazı adını okumak için Bluetooth izni (otomatik EQ için)
+
+### Kurulum
+
+1. [Releases](../../releases) sayfasını aç.
+2. En son `.apk` dosyasını indir.
+3. Telefonunda aç. Android, tarayıcından ya da dosya yöneticisinden yüklemeye izin vermeni isteyebilir.
+
+Güncellemeleri [Obtainium](https://github.com/ImranR98/Obtainium) ile de takip edebilirsin: bu deponun adresini ekle, yeni sürüm çıkınca haber verir.
+
+### Yol haritası
+
+- Beta 2: İngilizce, Fransızca, Almanca ve İtalyanca çeviriler, şarkı sözleri, indirmeler, Hakkında ve Yenilikler ekranı, daha fazla tema seçeneği
+- Daha sonra: etiket düzenleme, yeni özellikler
+
+### Katkı
+
+Hata bildirimleri ve fikirler memnuniyetle karşılanır. Bir [issue](../../issues) aç, ne olduğunu, telefon modelini ve Android sürümünü yaz.
+
+### Lisans
+
+GPL-3.0 lisansı ile yayınlanmıştır. [LICENSE](LICENSE) dosyasına bak.
