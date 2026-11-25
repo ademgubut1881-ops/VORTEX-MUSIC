@@ -15,6 +15,8 @@ No ads, no account, no tracking. It works fully offline and doesn't even ask for
 
 > **Status:** Beta 2 (in testing). The interface is available in Turkish and English.
 
+> **Built with AI assistance:** Vortex Music is a beta, developed by one person with the help of an AI assistant (Claude). It may still have bugs. Please report anything you find through Issues, it helps a lot.
+
 > **About the sound:** the audio engine is still in development. Your feedback helps us a lot in shaping it, so please tell us how Vortex sounds on your headphones and speakers.
 
 ## Screenshots
@@ -24,6 +26,8 @@ No ads, no account, no tracking. It works fully offline and doesn't even ask for
 <p align="center"><img src="docs/screenshots/en/04-appearance.png" alt="Themes and appearance" width="100%"></p>
 <p align="center"><img src="docs/screenshots/en/05-library.png" alt="Sorting and layouts" width="100%"></p>
 <p align="center"><img src="docs/screenshots/en/06-tools.png" alt="Built-in tools" width="100%"></p>
+
+<p align="center"><sub>Screenshots use fictional artists and songs.</sub></p>
 
 ## Features
 
@@ -110,6 +114,8 @@ Reklam yok, hesap yok, takip yok. Tamamen çevrimdışı çalışır, internet i
 
 > **Durum:** Beta 2 (test aşamasında). Arayüz Türkçe ve İngilizce olarak kullanılabilir.
 
+> **Yapay zeka yardımıyla geliştirildi:** Vortex Music bir beta sürümüdür. Tek kişi tarafından, yapay zeka asistanı (Claude) yardımıyla geliştirildi. Hâlâ hata olabilir. Bulduğun hataları Issues bölümünden bildirirsen çok yardımcı olur.
+
 > **Ses hakkında:** ses motoru hâlâ geliştirilme aşamasındadır. Geri bildirimleriniz geliştirme sürecimizde bize çok yardımcı olacak. Vortex'in kulaklığınızda ve hoparlörünüzde nasıl duyulduğunu bize yazın.
 
 ### Ekran görüntüleri
@@ -119,6 +125,8 @@ Reklam yok, hesap yok, takip yok. Tamamen çevrimdışı çalışır, internet i
 <p align="center"><img src="docs/screenshots/04-appearance.png" alt="Temalar ve görünüm" width="100%"></p>
 <p align="center"><img src="docs/screenshots/05-library.png" alt="Sıralama ve görünümler" width="100%"></p>
 <p align="center"><img src="docs/screenshots/06-tools.png" alt="Hazır araçlar" width="100%"></p>
+
+<p align="center"><sub>Görsellerdeki sanatçı ve şarkılar kurgusaldır.</sub></p>
 
 ### Özellikler
 
