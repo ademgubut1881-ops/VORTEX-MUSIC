@@ -30,8 +30,11 @@ object DuplicatesTool {
 
     fun entries(host: ToolHost): List<ToolEntry> = listOf(
         ToolEntry(
-            "Yinelenen dosyalar",
-            "Aynı şarkının birden fazla kopyasını bul ve temizle",
+            tx("Yinelenen dosyalar", "Duplicate files"),
+            tx(
+                "Aynı şarkının birden fazla kopyasını bul ve temizle",
+                "Find and clean up multiple copies of the same song"
+            ),
             IconDrawable.FOLDER
         ) { open(host) }
     )
@@ -39,7 +42,7 @@ object DuplicatesTool {
     private fun handle(host: ToolHost, req: Int, res: Int): Boolean {
         if (req != REQ_DELETE) return false
         if (res == Activity.RESULT_OK) {
-            host.ui.toast("Dosyalar silindi")
+            host.ui.toast(tx("Dosyalar silindi", "Files deleted"))
             host.activity.recreate()
         }
         return true
@@ -116,7 +119,7 @@ object DuplicatesTool {
             emptyList()
         }
         if (clusters.isEmpty()) {
-            ui.toast("Yinelenen dosya bulunamadı")
+            ui.toast(tx("Yinelenen dosya bulunamadı", "No duplicate files found"))
             return
         }
 
@@ -139,7 +142,7 @@ object DuplicatesTool {
             })
             for (item in cluster) {
                 val cb = CheckBox(activity)
-                val tag = if (item === biggest) " · en büyük" else ""
+                val tag = if (item === biggest) tx(" · en büyük", " · largest") else ""
                 cb.text = "${mb(item.size)} · ${ui.fmt(item.duration)}$tag\n${item.place}"
                 cb.textSize = 12f
                 box.addView(cb)
@@ -152,11 +155,11 @@ object DuplicatesTool {
         val scroll = ScrollView(activity)
         scroll.addView(box)
         val dialog = AlertDialog.Builder(activity)
-            .setTitle("Yinelenen dosyalar (${clusters.size} grup)")
+            .setTitle(tx("Yinelenen dosyalar (${clusters.size} grup)", "Duplicate files (${clusters.size} groups)"))
             .setView(scroll)
-            .setPositiveButton("Seçilenleri sil", null)
-            .setNeutralButton("Önerileni seç", null)
-            .setNegativeButton("Kapat", null)
+            .setPositiveButton(tx("Seçilenleri sil", "Delete selected"), null)
+            .setNeutralButton(tx("Önerileni seç", "Select suggested"), null)
+            .setNegativeButton(tx("Kapat", "Close"), null)
             .create()
         dialog.show()
 
@@ -167,15 +170,20 @@ object DuplicatesTool {
             val chosen = HashSet<Long>()
             for (cb in checks) if (cb.isChecked) ids[cb]?.let { chosen.add(it) }
             if (chosen.isEmpty()) {
-                ui.toast("Önce silinecek dosyaları seç")
+                ui.toast(tx("Önce silinecek dosyaları seç", "Select the files to delete first"))
                 return@setOnClickListener
             }
             if (groups.any { g -> g.all { chosen.contains(it) } }) {
-                ui.toast("Bir grupta tüm kopyaları seçtin. En az birini bırak.")
+                ui.toast(
+                    tx(
+                        "Bir grupta tüm kopyaları seçtin. En az birini bırak.",
+                        "You selected every copy in a group. Leave at least one."
+                    )
+                )
                 return@setOnClickListener
             }
             if (Build.VERSION.SDK_INT < 30) {
-                ui.toast("Dosya silmek için Android 11 ya da üstü gerekir")
+                ui.toast(tx("Dosya silmek için Android 11 ya da üstü gerekir", "Deleting files requires Android 11 or newer"))
                 return@setOnClickListener
             }
             try {
@@ -186,7 +194,7 @@ object DuplicatesTool {
                 activity.startIntentSenderForResult(pi.intentSender, REQ_DELETE, null, 0, 0, 0)
                 dialog.dismiss()
             } catch (e: Exception) {
-                ui.toast("Silme isteği açılamadı")
+                ui.toast(tx("Silme isteği açılamadı", "Could not open the delete request"))
             }
         }
     }

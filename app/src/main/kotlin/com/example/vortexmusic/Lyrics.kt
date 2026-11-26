@@ -174,19 +174,29 @@ object LyricsTool {
     private var refreshHook: (() -> Unit)? = null
     private val handler = Handler(Looper.getMainLooper())
 
+    // Beta 2'ye kadar kapalı. Açmak için true yap.
+    private const val ENABLED = false
+
     fun install(host: ToolHost) {
+        if (!ENABLED) return
         host.resultHandlers.add { req, res, data -> handle(host, req, res, data) }
         // Ekran hazır olunca tam ekran çalara söz düğmesi eklenir
         host.activity.window.decorView.post { injectButton(host) }
     }
 
-    fun entries(host: ToolHost): List<ToolEntry> = listOf(
-        ToolEntry(
-            "Şarkı sözleri",
-            "Çalan şarkının sözlerini göster, içe aktar ya da yapıştır",
-            IconDrawable.NOTE
-        ) { open(host) }
-    )
+    fun entries(host: ToolHost): List<ToolEntry> {
+        if (!ENABLED) return emptyList()
+        return listOf(
+            ToolEntry(
+                tx("Şarkı sözleri", "Lyrics"),
+                tx(
+                    "Çalan şarkının sözlerini göster, içe aktar ya da yapıştır",
+                    "Show, import or paste the lyrics of the playing song"
+                ),
+                IconDrawable.NOTE
+            ) { open(host) }
+        )
+    }
 
     private fun injectButton(host: ToolHost) {
         val screen = host.activity.findViewById<LinearLayout>(R.id.nowPlayingScreen) ?: return
@@ -221,7 +231,7 @@ object LyricsTool {
                 if (shown) return
                 val p = (service as? PlaybackService.LocalBinder)?.getPlayer()
                 if (p == null) {
-                    host.ui.toast("Çalar henüz hazır değil")
+                    host.ui.toast(tx("Çalar henüz hazır değil", "The player is not ready yet"))
                     safeUnbind(activity, this)
                     return
                 }
@@ -236,7 +246,7 @@ object LyricsTool {
             conn,
             Context.BIND_AUTO_CREATE
         )
-        if (!ok) host.ui.toast("Çalara bağlanılamadı")
+        if (!ok) host.ui.toast(tx("Çalara bağlanılamadı", "Could not connect to the player"))
     }
 
     private fun showDialog(host: ToolHost, player: Player, conn: ServiceConnection) {
@@ -290,18 +300,22 @@ object LyricsTool {
             lines = emptyList()
             active = -1
             val meta = player.currentMediaItem?.mediaMetadata
-            songTitle.text = meta?.title?.toString() ?: "Çalan şarkı yok"
+            songTitle.text = meta?.title?.toString() ?: tx("Çalan şarkı yok", "Nothing playing")
             songArtist.text = meta?.artist?.toString() ?: ""
             if (id < 0) {
-                box.addView(ui.noteText("Önce bir şarkı çal."))
+                box.addView(ui.noteText(tx("Önce bir şarkı çal.", "Play a song first.")))
                 return
             }
             val text = LyricsStore.load(activity, id)
             if (text == null) {
                 box.addView(
                     ui.noteText(
-                        "Bu şarkı için söz yok. Aşağıdan bir .lrc ya da .txt dosyası içe aktar " +
-                            "veya sözleri yapıştır. .lrc dosyalarında satırlar müzikle birlikte parlar."
+                        tx(
+                            "Bu şarkı için söz yok. Aşağıdan bir .lrc ya da .txt dosyası içe aktar " +
+                                "veya sözleri yapıştır. .lrc dosyalarında satırlar müzikle birlikte parlar.",
+                            "There are no lyrics for this song. Import a .lrc or .txt file below " +
+                                "or paste the lyrics. In .lrc files the lines light up with the music."
+                        )
                     )
                 )
                 return
@@ -367,51 +381,51 @@ object LyricsTool {
 
         fun askPaste() {
             if (shownId < 0) {
-                ui.toast("Önce bir şarkı çal")
+                ui.toast(tx("Önce bir şarkı çal", "Play a song first"))
                 return
             }
             val input = EditText(activity).apply {
-                hint = "Sözleri yapıştır (düz metin ya da .lrc)"
+                hint = tx("Sözleri yapıştır (düz metin ya da .lrc)", "Paste the lyrics (plain text or .lrc)")
                 minLines = 8
                 gravity = Gravity.TOP or Gravity.START
                 inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             }
             AlertDialog.Builder(activity)
-                .setTitle("Sözleri yapıştır")
+                .setTitle(tx("Sözleri yapıştır", "Paste lyrics"))
                 .setView(input)
-                .setPositiveButton("Kaydet") { _, _ ->
+                .setPositiveButton(tx("Kaydet", "Save")) { _, _ ->
                     val t = input.text.toString()
                     if (t.isBlank()) {
-                        ui.toast("Metin boş")
+                        ui.toast(tx("Metin boş", "The text is empty"))
                     } else if (LyricsStore.save(activity, shownId, t)) {
                         render(shownId)
                     } else {
-                        ui.toast("Kaydedilemedi")
+                        ui.toast(tx("Kaydedilemedi", "Could not save"))
                     }
                 }
-                .setNegativeButton("Vazgeç", null)
+                .setNegativeButton(tx("Vazgeç", "Cancel"), null)
                 .show()
         }
 
         fun askDelete() {
             if (shownId < 0 || LyricsStore.load(activity, shownId) == null) {
-                ui.toast("Silinecek söz yok")
+                ui.toast(tx("Silinecek söz yok", "No lyrics to delete"))
                 return
             }
             AlertDialog.Builder(activity)
-                .setTitle("Bu şarkının sözleri silinsin mi?")
-                .setPositiveButton("Sil") { _, _ ->
+                .setTitle(tx("Bu şarkının sözleri silinsin mi?", "Delete this song's lyrics?"))
+                .setPositiveButton(tx("Sil", "Delete")) { _, _ ->
                     LyricsStore.delete(activity, shownId)
                     render(shownId)
                 }
-                .setNegativeButton("Vazgeç", null)
+                .setNegativeButton(tx("Vazgeç", "Cancel"), null)
                 .show()
         }
 
         @Suppress("DEPRECATION")
         fun askImport() {
             if (shownId < 0) {
-                ui.toast("Önce bir şarkı çal")
+                ui.toast(tx("Önce bir şarkı çal", "Play a song first"))
                 return
             }
             pendingId = shownId
@@ -428,11 +442,11 @@ object LyricsTool {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { topMargin = ui.dp(10) }
         }
-        actions.addView(ui.actionPill("İçe aktar") { askImport() })
-        actions.addView(ui.actionPill("Yapıştır") { askPaste() })
-        actions.addView(ui.actionPill("Sil") { askDelete() })
+        actions.addView(ui.actionPill(tx("İçe aktar", "Import")) { askImport() })
+        actions.addView(ui.actionPill(tx("Yapıştır", "Paste")) { askPaste() })
+        actions.addView(ui.actionPill(tx("Sil", "Delete")) { askDelete() })
 
-        root.addView(ui.header("Şarkı sözleri") { dialog.dismiss() })
+        root.addView(ui.header(tx("Şarkı sözleri", "Lyrics")) { dialog.dismiss() })
         root.addView(songTitle)
         root.addView(songArtist)
         root.addView(scroll)
@@ -475,14 +489,14 @@ object LyricsTool {
         if (id < 0) return true
         val text = readLimited(host, uri)
         if (text == null || text.isBlank() || text.indexOf('\u0000') >= 0) {
-            host.ui.toast("Geçerli bir metin ya da .lrc dosyası değil")
+            host.ui.toast(tx("Geçerli bir metin ya da .lrc dosyası değil", "Not a valid text or .lrc file"))
             return true
         }
         if (LyricsStore.save(host.activity, id, text)) {
-            host.ui.toast("Sözler kaydedildi")
+            host.ui.toast(tx("Sözler kaydedildi", "Lyrics saved"))
             refreshHook?.invoke()
         } else {
-            host.ui.toast("Sözler kaydedilemedi")
+            host.ui.toast(tx("Sözler kaydedilemedi", "Could not save the lyrics"))
         }
         return true
     }

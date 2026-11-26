@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="VortexDialog" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/vortex_purple</item>
+        <item name="android:colorControlActivated">@color/vortex_purple</item>
+        <item name="android:textColorPrimary">@color/vortex_text</item>
+        <item name="android:textColorSecondary">@color/vortex_text_secondary</item>
+    </style>
+
+    <style name="VortexDialogLight" parent="android:Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/vortex_purple</item>
+        <item name="android:colorControlActivated">@color/vortex_purple</item>
+    </style>
+</resources>

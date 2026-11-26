@@ -15,8 +15,10 @@ class Song(
     val track: Int = 0,
     val modified: Long = 0L,
     val fileName: String = "",
-    val path: String = ""
+    val path: String = "",
+    val docUri: String? = null
 ) {
     val uri: Uri
-        get() = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
+        get() = if (docUri != null) Uri.parse(docUri)
+        else ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
 }

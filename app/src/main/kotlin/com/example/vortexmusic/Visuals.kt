@@ -139,6 +139,7 @@ class IconDrawable(
         const val CHART = 17
         const val PLUS = 18
         const val EQ = 19
+        const val GEAR = 20
     }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -374,6 +375,17 @@ class IconDrawable(
             PLUS -> {
                 c.drawLine(12f, 5f, 12f, 19f, p)
                 c.drawLine(5f, 12f, 19f, 12f, p)
+            }
+            GEAR -> {
+                // Dişli: ortada daire, çevresinde 8 diş
+                c.drawCircle(12f, 12f, 3.2f, p)
+                c.drawCircle(12f, 12f, 6.6f, p)
+                for (k in 0 until 8) {
+                    val a = k * Math.PI / 4.0
+                    val ca = Math.cos(a).toFloat()
+                    val sa = Math.sin(a).toFloat()
+                    c.drawLine(12f + ca * 6.6f, 12f + sa * 6.6f, 12f + ca * 9.2f, 12f + sa * 9.2f, p)
+                }
             }
             EQ -> {
                 c.drawLine(6f, 4f, 6f, 20f, p)

@@ -6,10 +6,6 @@ import android.content.Intent
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
-import android.media.audiofx.BassBoost
-import android.media.audiofx.Equalizer
-import android.media.audiofx.LoudnessEnhancer
-import android.media.audiofx.Virtualizer
 import android.os.Binder
 import android.os.Build
 import android.os.Handler
@@ -18,9 +14,13 @@ import android.os.Looper
 import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import org.json.JSONArray
@@ -112,11 +112,15 @@ class ListenTracker(context: Context, private val player: Player) : Player.Liste
 
 // ================== SES EFEKTLERİ VE PROFİLLER ==================
 
-class AudioFxController(context: Context, private val player: ExoPlayer) : Player.Listener {
+class AudioFxController(
+    context: Context,
+    private val player: ExoPlayer,
+    val eqProc: VortexEqProcessor
+) : Player.Listener {
 
     class Preset(
         val name: String,
-        val shape: FloatArray,
+        val db: FloatArray,
         val bass: Int,
         val virt: Int,
         val loud: Int
@@ -141,29 +145,42 @@ class AudioFxController(context: Context, private val player: ExoPlayer) : Playe
         val levels: List<Int>
     )
 
+    // 10 bant: 31, 62, 125, 250, 500, 1k, 2k, 4k, 8k, 16k Hz (dB)
+    // bass: harmonik bas 0-1000, virt: stereo genişlik 0-1000, loud: ses yükseltme (1/100 dB)
     val presets = listOf(
-        Preset("Düz", floatArrayOf(0f, 0f, 0f, 0f, 0f), 0, 0, 0),
-        Preset("Doğal ses", floatArrayOf(0.1f, 0f, 0f, 0.1f, 0.2f), 150, 0, 0),
-        Preset("Bas artır", floatArrayOf(1f, 0.7f, 0.2f, 0f, 0f), 500, 0, 0),
-        Preset("Vokal", floatArrayOf(-0.3f, 0f, 0.6f, 0.5f, 0f), 0, 0, 0),
-        Preset("Akustik", floatArrayOf(0.4f, 0.3f, 0.2f, 0.4f, 0.5f), 0, 0, 0),
-        Preset("Parlak", floatArrayOf(-0.2f, 0f, 0f, 0.5f, 1f), 0, 0, 0)
+        Preset("Düz", floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f), 0, 0, 0),
+        Preset("Doğal", floatArrayOf(0.5f, 0.5f, 0f, 0f, 0f, 0f, 0f, 0.5f, 1f, 1f), 0, 0, 0),
+        Preset("Enstrümantal", floatArrayOf(2.5f, 2.5f, 0.5f, -1f, -0.5f, 0.5f, 1.5f, 2f, 1.5f, 1f), 100, 200, 150),
+        Preset("Klasik", floatArrayOf(1f, 1f, 0.5f, 0f, 0f, 0f, 0.5f, 1f, 1.5f, 1.5f), 0, 150, 100),
+        Preset("Derin Bas", floatArrayOf(6f, 5.5f, 2.5f, 0.5f, 0f, 0f, 0f, 0f, 0f, 0f), 450, 0, 100),
+        Preset("Berrak Ses", floatArrayOf(-1.5f, -1f, -0.5f, 0f, 0f, 0.5f, 1.5f, 2.5f, 3f, 2.5f), 0, 100, 100),
+        Preset("Vokal", floatArrayOf(-2f, -1.5f, -0.5f, 0.5f, 1.5f, 2.5f, 2.5f, 1.5f, 0f, -0.5f), 0, 0, 100),
+        Preset("Gece", floatArrayOf(1f, 1f, 0.5f, 0.5f, 0f, 0f, 0f, -1f, -1.5f, -2f), 0, 0, 0)
     )
 
     private val prefs = context.getSharedPreferences("vortex_audio", Context.MODE_PRIVATE)
-    private var eq: Equalizer? = null
-    private var bass: BassBoost? = null
-    private var loud: LoudnessEnhancer? = null
-    private var virt: Virtualizer? = null
 
     var enabled: Boolean = prefs.getBoolean("enabled", false)
+    // Saf mod: tüm efektleri atlar (ayarlar silinmez). Ses dosyadaki gibi çıkar.
+    var pure: Boolean = prefs.getBoolean("pure", false)
+    // Otomatik ses dengeleme: şarkılar arası ses farkını kendiliğinden azaltır
+    var autoLevel: Boolean = prefs.getBoolean("autolevel", true)
+    // Animasyon senkron ince ayarı (milisaniye, -100..+300). Çıkış cihazına göre taban gecikmeye eklenir.
+    var syncAdjust: Int = prefs.getInt("syncadj", 0)
+    // Animasyon senkronu kapalıysa görseller gecikmesiz (canlı) okunur
+    var syncOff: Boolean = prefs.getBoolean("syncoff", false)
+    // Kulaklık düzeltme: 0 kapalı, 1 kulak içi, 2 kulak üstü, 3 boğuk
+    var correction: Int = prefs.getInt("corr", 0)
+    // Son seçilen hazır ayar: üzerinde ince ayar yapınca da seçili görünür
+    var lastPreset: String = prefs.getString("lastpreset", "") ?: ""
     var bassStrength: Int = prefs.getInt("bass", 0)
     var virtStrength: Int = prefs.getInt("virt", 0)
     var loudnessMb: Int = prefs.getInt("loud", 0)
 
-    var bandCount = 0
-    var minLevel = -1500
-    var maxLevel = 1500
+    // Vortex'in kendi ekolayzırı: 10 bant, -12 ile +12 dB (değerler 1/100 dB cinsinden)
+    var bandCount = VortexEqProcessor.BANDS
+    var minLevel = -1200
+    var maxLevel = 1200
     val bandFreqs = mutableListOf<Int>()
     val levels = mutableListOf<Int>()
 
@@ -175,126 +192,71 @@ class AudioFxController(context: Context, private val player: ExoPlayer) : Playe
     var autoProfileName: String = ""
     private var snapshot: Snapshot? = null
 
-    val eqAvailable: Boolean get() = eq != null
-    val bassAvailable: Boolean get() = bass != null
-    val loudAvailable: Boolean get() = loud != null
-    val virtAvailable: Boolean get() = virt != null
+    val eqAvailable: Boolean get() = true
+    // Bas, ses yükseltme ve genişlik Vortex'in kendi işlemcisinde çalışır, her telefonda vardır
+    val bassAvailable: Boolean get() = true
+    val loudAvailable: Boolean get() = true
+    val virtAvailable: Boolean get() = true
 
     init {
+        for (f in VortexEqProcessor.FREQS) bandFreqs.add(f)
+        loadLevels()
         loadProfiles()
+        pushEq()
     }
 
     override fun onAudioSessionIdChanged(audioSessionId: Int) {
         attach(audioSessionId)
     }
 
+    // Eski telefon efektleri kaldırıldı, ses artık kendi işlemcimizden geçer
     fun attach(sessionId: Int) {
-        releaseEffects()
-        if (sessionId == C.AUDIO_SESSION_ID_UNSET || sessionId == 0) return
-        try {
-            val e = Equalizer(0, sessionId)
-            eq = e
-            bandCount = e.numberOfBands.toInt()
-            val range = e.bandLevelRange
-            minLevel = range[0].toInt()
-            maxLevel = range[1].toInt()
-            bandFreqs.clear()
-            for (i in 0 until bandCount) {
-                bandFreqs.add(e.getCenterFreq(i.toShort()) / 1000)
-            }
-            loadLevels()
-        } catch (ex: Exception) {
-            eq = null
-        }
-        try {
-            bass = BassBoost(0, sessionId)
-        } catch (ex: Exception) {
-            bass = null
-        }
-        try {
-            loud = LoudnessEnhancer(sessionId)
-        } catch (ex: Exception) {
-            loud = null
-        }
-        try {
-            virt = Virtualizer(0, sessionId)
-        } catch (ex: Exception) {
-            virt = null
-        }
         applyAll()
     }
 
     private fun loadLevels() {
         levels.clear()
-        val saved = prefs.getString("levels", "") ?: ""
+        val saved = prefs.getString("levels10", "") ?: ""
         val parsed = if (saved.isEmpty()) emptyList() else saved.split(",").mapNotNull { it.toIntOrNull() }
         for (i in 0 until bandCount) {
             levels.add(parsed.getOrElse(i) { 0 })
         }
     }
 
+    // Kendi ses işlemcimize güncel değerleri gönderir
+    private fun pushEq() {
+        val g = DoubleArray(VortexEqProcessor.BANDS) { i ->
+            levels.getOrElse(i) { 0 }.coerceIn(minLevel, maxLevel) / 100.0
+        }
+        eqProc.setParams(
+            g,
+            enabled && !pure,
+            bassStrength.coerceIn(0, 1000) / 1000f,
+            loudnessMb.coerceIn(0, 1000) / 100f,
+            virtStrength.coerceIn(0, 1000) / 1000f,
+            autoLevel && !pure,
+            correction
+        )
+    }
+
     fun applyAll() {
-        try {
-            val e = eq
-            if (e != null) {
-                for (i in 0 until bandCount) {
-                    val lv = levels.getOrElse(i) { 0 }.coerceIn(minLevel, maxLevel)
-                    e.setBandLevel(i.toShort(), lv.toShort())
-                }
-                e.setEnabled(enabled)
-            }
-        } catch (ex: Exception) {
-        }
-        try {
-            val b = bass
-            if (b != null) {
-                if (b.strengthSupported) b.setStrength(bassStrength.coerceIn(0, 1000).toShort())
-                b.setEnabled(enabled && bassStrength > 0)
-            }
-        } catch (ex: Exception) {
-        }
-        try {
-            val l = loud
-            if (l != null) {
-                l.setTargetGain(loudnessMb.coerceIn(0, 1000))
-                l.setEnabled(enabled && loudnessMb > 0)
-            }
-        } catch (ex: Exception) {
-        }
-        try {
-            val v = virt
-            if (v != null) {
-                if (v.strengthSupported) v.setStrength(virtStrength.coerceIn(0, 1000).toShort())
-                v.setEnabled(enabled && virtStrength > 0)
-            }
-        } catch (ex: Exception) {
-        }
+        pushEq()
+        applySync()
     }
 
     fun setBand(index: Int, level: Int) {
         if (index !in levels.indices) return
-        levels[index] = level
-        try {
-            eq?.setBandLevel(index.toShort(), level.coerceIn(minLevel, maxLevel).toShort())
-        } catch (ex: Exception) {
-        }
+        levels[index] = level.coerceIn(minLevel, maxLevel)
+        pushEq()
     }
 
-    fun presetLevels(p: Preset): List<Int> {
-        val n = bandCount
-        if (n == 0) return emptyList()
-        val shape = p.shape
-        return List(n) { i ->
-            val pos = if (n == 1) 0f else i.toFloat() / (n - 1) * (shape.size - 1)
-            val lo = pos.toInt().coerceIn(0, shape.size - 1)
-            val hi = (lo + 1).coerceAtMost(shape.size - 1)
-            val t = pos - lo
-            val w = shape[lo] * (1f - t) + shape[hi] * t
-            (w * 600f).toInt().coerceIn(minLevel, maxLevel)
+    fun presetLevels(p: Preset): List<Int> =
+        List(bandCount) { i ->
+            Math.round(p.db.getOrElse(i) { 0f } * 100f).coerceIn(minLevel, maxLevel)
         }
-    }
 
     fun setPreset(p: Preset) {
+        lastPreset = p.name
         val lv = presetLevels(p)
         for (i in 0 until bandCount) {
             if (i in levels.indices) levels[i] = lv.getOrElse(i) { 0 }
@@ -319,10 +281,16 @@ class AudioFxController(context: Context, private val player: ExoPlayer) : Playe
     fun save() {
         prefs.edit()
             .putBoolean("enabled", enabled)
+            .putBoolean("pure", pure)
+            .putBoolean("autolevel", autoLevel)
+            .putInt("syncadj", syncAdjust)
+            .putBoolean("syncoff", syncOff)
+            .putInt("corr", correction)
+            .putString("lastpreset", lastPreset)
             .putInt("bass", bassStrength)
             .putInt("virt", virtStrength)
             .putInt("loud", loudnessMb)
-            .putString("levels", levels.joinToString(","))
+            .putString("levels10", levels.joinToString(","))
             .apply()
     }
 
@@ -525,8 +493,21 @@ class AudioFxController(context: Context, private val player: ExoPlayer) : Playe
     }
 
     // Çıkış cihazı değişince çağrılır. Cihaz yoksa name boştur.
+    // Tahmini taban gecikme: hoparlör, kablolu, Bluetooth. Üstüne kullanıcı ince ayarı eklenir.
+    fun applySync() {
+        val base = when {
+            currentOutput.isEmpty() -> 110L
+            currentOutput == WIRED_LABEL -> 90L
+            else -> 280L
+        }
+        eqProc.syncDelayMs = if (syncOff) 0L else (base + syncAdjust).coerceIn(0L, 600L)
+    }
+
     fun onOutputChanged(name: String) {
         currentOutput = name
+        // Bluetooth çıkışta sabit ses payı uygulanır (kablolu ve hoparlörde uygulanmaz)
+        Headroom.bluetooth = name.isNotEmpty() && name != WIRED_LABEL
+        applySync()
         if (!autoEnabled) return
         val match = if (name.isEmpty()) null else profiles.firstOrNull { deviceMatches(it.headphone, name) }
         if (match != null) {
@@ -551,19 +532,7 @@ class AudioFxController(context: Context, private val player: ExoPlayer) : Playe
         }
     }
 
-    private fun releaseEffects() {
-        try { eq?.release() } catch (ex: Exception) { }
-        try { bass?.release() } catch (ex: Exception) { }
-        try { loud?.release() } catch (ex: Exception) { }
-        try { virt?.release() } catch (ex: Exception) { }
-        eq = null
-        bass = null
-        loud = null
-        virt = null
-    }
-
     fun release() {
-        releaseEffects()
     }
 
     companion object {
@@ -644,6 +613,7 @@ class PlaybackService : MediaSessionService() {
     private var tracker: ListenTracker? = null
     private var fx: AudioFxController? = null
     private var watcher: OutputWatcher? = null
+    private var eqProcessor: VortexEqProcessor? = null
 
     inner class LocalBinder : Binder() {
         fun getPlayer(): ExoPlayer? = exoPlayer
@@ -652,7 +622,32 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        val exo = ExoPlayer.Builder(this)
+        val eqProc = VortexEqProcessor()
+        eqProcessor = eqProc
+        // TEST: Araçlar > Ses çıkışı testi anahtarı açıksa işlemci hiç hatta takılmaz
+        val noChain = getSharedPreferences("vortex_audio", Context.MODE_PRIVATE)
+            .getBoolean(NOCHAIN_KEY, false)
+        noChainActive = noChain
+        Headroom.load(this)
+        val testGain = HeadroomProcessor()
+        // Ses hattına kendi ekolayzırımızı ekleyen ses çıkışı
+        val renderers = object : DefaultRenderersFactory(this) {
+            override fun buildAudioSink(
+                context: Context,
+                enableFloatOutput: Boolean,
+                enableAudioTrackPlaybackParams: Boolean
+            ): AudioSink? {
+                return DefaultAudioSink.Builder(context)
+                    .setEnableFloatOutput(enableFloatOutput)
+                    .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                    .setAudioProcessors(
+                        if (noChain) arrayOf<AudioProcessor>(testGain)
+                        else arrayOf<AudioProcessor>(eqProc, testGain)
+                    )
+                    .build()
+            }
+        }
+        val exo = ExoPlayer.Builder(this, renderers)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -663,10 +658,21 @@ class PlaybackService : MediaSessionService() {
             .setHandleAudioBecomingNoisy(true)
             .build()
         exoPlayer = exo
+        // Ses çıkışı testi ekranı için çalan dosyanın biçimi
+        formatInfo = {
+            val f = exo.audioFormat
+            if (f == null) {
+                ""
+            } else {
+                val rate = if (f.sampleRate > 0) "${f.sampleRate} Hz" else "? Hz"
+                val kbps = if (f.averageBitrate > 0) " · ${f.averageBitrate / 1000} kbps" else ""
+                "${f.sampleMimeType ?: "?"} · $rate · ${f.channelCount} ch$kbps"
+            }
+        }
         val t = ListenTracker(this, exo)
         tracker = t
         exo.addListener(t)
-        val controller = AudioFxController(this, exo)
+        val controller = AudioFxController(this, exo, eqProc)
         fx = controller
         exo.addListener(controller)
         controller.attach(exo.audioSessionId)
@@ -721,6 +727,8 @@ class PlaybackService : MediaSessionService() {
             it.release()
         }
         fx = null
+        formatInfo = null
+        eqProcessor = null
         session?.release()
         exoPlayer?.release()
         session = null
@@ -730,5 +738,10 @@ class PlaybackService : MediaSessionService() {
 
     companion object {
         const val ACTION_LOCAL = "com.example.vortexmusic.LOCAL"
+        const val NOCHAIN_KEY = "nochain"
+
+        // Test ekranı için: çalan dosyanın biçimi ve işlemcinin hatta olup olmadığı
+        @Volatile var formatInfo: (() -> String)? = null
+        @Volatile var noChainActive: Boolean = false
     }
 }

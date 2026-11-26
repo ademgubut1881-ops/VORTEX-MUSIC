@@ -5,7 +5,10 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -32,6 +35,12 @@ object ThemeStore {
     const val VORTEX = 0
     const val MONO = 1
     const val DYNAMIC = 9
+    const val SAGE = 8
+    const val NIGHT = 10
+    const val SNOW = 11
+
+    // Görünüm ekranında gösterilen temalar (sistem rengi yok). İlk üçü: Adaçayı, Gece Siyahı, Kar Beyazı
+    val visible = intArrayOf(SAGE, NIGHT, SNOW, VORTEX, 2, 3, 4, 5, 6, 7)
 
     val schemes = listOf(
         Scheme("Vortex (varsayılan)", 0, 0),
@@ -59,7 +68,9 @@ object ThemeStore {
                 Color.parseColor("#18241F")
             )
         ),
-        Scheme("Dinamik", 0, 0)
+        Scheme("Dinamik", 0, 0),
+        Scheme("Gece Siyahı", 0, 0),
+        Scheme("Kar Beyazı", 0, 0)
     )
 
     // 0 sistem, 1 açık, 2 koyu
@@ -82,7 +93,7 @@ object ThemeStore {
     private val monoLightA = Color.parseColor("#14161B")
     private val monoLightB = Color.parseColor("#3A3A44")
 
-    fun mono(): Boolean = scheme == MONO
+    fun mono(): Boolean = scheme == MONO || scheme == NIGHT || scheme == SNOW
 
     fun isDynamicAvailable(): Boolean = Build.VERSION.SDK_INT >= 31
 
@@ -150,6 +161,7 @@ object ThemeStore {
     }
 
     fun load(ctx: Context) {
+        I18n.load(ctx)
         val sp = ctx.getSharedPreferences("vortex_theme", Context.MODE_PRIVATE)
         if (sp.contains("mode")) {
             mode = sp.getInt("mode", 2).coerceIn(0, 2)
@@ -162,7 +174,14 @@ object ThemeStore {
             mode = m[0]
             scheme = m[1]
         }
-        if (scheme == DYNAMIC && !isDynamicAvailable()) scheme = 0
+        // Yeni düzen: mod seçimi yok. Açık tema kullananlar Kar Beyazı'na, tek renkliler Gece Siyahı'na, sistem rengi kullananlar Adaçayı'na geçer.
+        scheme = when {
+            mode == 1 -> SNOW
+            scheme == MONO -> NIGHT
+            visible.contains(scheme) -> scheme
+            else -> SAGE
+        }
+        mode = if (scheme == SNOW) 1 else 2
         lines = sp.getBoolean("lines", true)
         blur = sp.getBoolean("blur", false)
         light = lightFor(ctx, mode)
@@ -173,7 +192,7 @@ object ThemeStore {
         ctx.getSharedPreferences("vortex_theme", Context.MODE_PRIVATE).edit()
             .putInt("mode", mode)
             .putInt("scheme", scheme)
-            .putInt("scheme_v", 2)
+            .putInt("scheme_v", 3)
             .putBoolean("lines", lines)
             .putBoolean("blur", blur)
             .commit()
@@ -192,28 +211,39 @@ object ThemeStore {
                 )
             }
             MONO -> if (isLight) intArrayOf(monoLightA, monoLightB) else intArrayOf(monoDarkA, monoDarkB)
+            NIGHT -> intArrayOf(monoDarkA, monoDarkB)
+            SNOW -> intArrayOf(monoLightA, monoLightB)
             DYNAMIC -> dynColors(ctx, isLight) ?: intArrayOf(lightA, lightB)
             else -> if (isLight) intArrayOf(darken(s.a), darken(s.b)) else intArrayOf(s.a, s.b)
         }
     }
 
-    fun displayName(index: Int, isLight: Boolean): String =
-        if (index == MONO) {
-            if (isLight) "İlk Kar" else "Gece Yarısı"
-        } else {
-            schemes[index].name
-        }
+    fun displayName(index: Int, isLight: Boolean): String = when (index) {
+        0 -> "Vortex"
+        MONO -> if (isLight) tx("İlk Kar", "First Snow") else tx("Gece Yarısı", "Midnight")
+        2 -> tx("Alacakaranlık", "Twilight")
+        3 -> tx("Derin Okyanus", "Deep Ocean")
+        4 -> tx("Zümrüt Orman", "Emerald Forest")
+        5 -> tx("Gül Bahçesi", "Rose Garden")
+        6 -> tx("Altın Saat", "Golden Hour")
+        7 -> tx("Kadife Bordo", "Velvet Burgundy")
+        8 -> tx("Adaçayı", "Sage")
+        DYNAMIC -> tx("Dinamik", "Dynamic")
+        NIGHT -> tx("Gece Siyahı", "Night Black")
+        SNOW -> tx("Kar Beyazı", "Snow White")
+        else -> schemes[index].name
+    }
 
     private fun accentA(): Int? = when (scheme) {
         VORTEX -> if (light) lightA else null
-        MONO -> if (light) monoLightA else monoDarkA
+        MONO, NIGHT, SNOW -> if (light) monoLightA else monoDarkA
         DYNAMIC -> dyn?.get(0)
         else -> if (light) darken(schemes[scheme].a) else schemes[scheme].a
     }
 
     private fun accentB(): Int? = when (scheme) {
         VORTEX -> if (light) lightB else null
-        MONO -> if (light) monoLightB else monoDarkB
+        MONO, NIGHT, SNOW -> if (light) monoLightB else monoDarkB
         DYNAMIC -> dyn?.get(1)
         else -> if (light) darken(schemes[scheme].b) else schemes[scheme].b
     }
@@ -232,16 +262,16 @@ object ThemeStore {
         if (light) {
             // Açık mod: göz almayan, yumuşatılmış beyaz
             when (id) {
-                R.color.vortex_background -> return Color.parseColor("#EFF1F5")
-                R.color.vortex_background_end -> return Color.parseColor("#E4E7EC")
-                R.color.vortex_surface -> return Color.parseColor("#F8F9FB")
-                R.color.vortex_surface_light -> return Color.parseColor("#DFE2E8")
+                R.color.vortex_background -> return Color.parseColor("#F7F8FA")
+                R.color.vortex_background_end -> return Color.parseColor("#EEF0F4")
+                R.color.vortex_surface -> return Color.parseColor("#FFFFFF")
+                R.color.vortex_surface_light -> return Color.parseColor("#ECEEF2")
                 R.color.vortex_text -> return Color.parseColor("#14161B")
                 R.color.vortex_text_secondary -> return Color.parseColor("#5C616B")
             }
         } else {
             val s = schemes[scheme].surfaces
-            val isMono = scheme == MONO
+            val isMono = mono()
             when (id) {
                 R.color.vortex_background -> return s?.get(0) ?: Color.BLACK
                 R.color.vortex_background_end ->
@@ -328,16 +358,104 @@ object ThemeTool {
 
     fun entries(host: ToolHost): List<ToolEntry> = listOf(
         ToolEntry(
-            "Görünüm",
-            "Görünüm modu (sistem, açık, koyu), renk şeması, bulanık renk ve neon çizgileri",
+            tx("Görünüm", "Appearance"),
+            tx(
+                "Renk teması, bulanık renk ve neon çizgileri",
+                "Color theme, blurred color and neon lines"
+            ),
             IconDrawable.DISC
-        ) { open(host) }
+        ) { open(host) },
+        ToolEntry(
+            tx("Dil", "Language"),
+            tx("Uygulama dili: sistem, Türkçe ya da English", "App language: system, Türkçe or English"),
+            IconDrawable.DISC
+        ) { openLanguage(host) }
     )
+
+    private fun openLanguage(host: ToolHost) {
+        val ui = host.ui
+        val activity = host.activity
+        val box = LinearLayout(activity)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(ui.dp(20), ui.dp(4), ui.dp(20), ui.dp(8))
+
+        val names = arrayOf(tx("Sistem", "System"), "Türkçe", "English")
+        var dialog: AlertDialog? = null
+        names.forEachIndexed { i, label ->
+            val on = I18n.choice == i
+            box.addView(TextView(activity).apply {
+                text = label
+                textSize = 15f
+                gravity = Gravity.CENTER
+                setTextColor(if (on) Color.WHITE else ui.color(R.color.vortex_text))
+                background = ui.pillBackground(on)
+                setPadding(ui.dp(16), ui.dp(13), ui.dp(16), ui.dp(13))
+                layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(10) }
+                setOnClickListener {
+                    dialog?.dismiss()
+                    if (I18n.choice != i) {
+                        I18n.save(activity, i)
+                        activity.recreate()
+                    }
+                }
+            })
+        }
+
+        val dialogTheme = if (ThemeStore.light) {
+            android.R.style.Theme_Material_Light_Dialog_Alert
+        } else {
+            android.R.style.Theme_Material_Dialog_Alert
+        }
+        val d = AlertDialog.Builder(activity, dialogTheme)
+            .setTitle(tx("Dil", "Language"))
+            .setView(box)
+            .setNegativeButton(tx("Vazgeç", "Cancel"), null)
+            .create()
+        dialog = d
+        d.show()
+        d.window?.setBackgroundDrawable(
+            GradientDrawable().apply {
+                setColor(ui.color(R.color.vortex_surface))
+                cornerRadius = ui.dp(24).toFloat()
+            }
+        )
+        d.getButton(AlertDialog.BUTTON_NEGATIVE)
+            ?.setTextColor(ui.color(R.color.vortex_text_secondary))
+    }
+
+    private fun mixWhite(c: Int, k: Float): Int = Color.rgb(
+        (Color.red(c) + (255 - Color.red(c)) * k).toInt(),
+        (Color.green(c) + (255 - Color.green(c)) * k).toInt(),
+        (Color.blue(c) + (255 - Color.blue(c)) * k).toInt()
+    )
+
+    // Üzerine yazı konacak zemine göre okunur renk
+    private fun readableOn(c: Int): Int {
+        val l = (0.299f * Color.red(c) + 0.587f * Color.green(c) + 0.114f * Color.blue(c)) / 255f
+        return if (l > 0.62f) Color.parseColor("#0B0B0F") else Color.WHITE
+    }
+
+    // Üç parçalı daire renkleri: [üst, sol alt, sağ alt]
+    private fun swatch(ctx: Context, index: Int): IntArray = when (index) {
+        ThemeStore.NIGHT -> intArrayOf(
+            Color.parseColor("#3A3A42"), Color.parseColor("#131316"), Color.parseColor("#F5F5F7")
+        )
+        ThemeStore.SNOW -> intArrayOf(
+            Color.WHITE, Color.parseColor("#DDE0E6"), Color.parseColor("#14161B")
+        )
+        ThemeStore.VORTEX -> {
+            val pc = ThemeStore.previewColors(ctx, ThemeStore.VORTEX, false)
+            intArrayOf(mixWhite(pc[0], 0.6f), pc[1], pc[0])
+        }
+        else -> {
+            val sc = ThemeStore.schemes[index]
+            intArrayOf(mixWhite(sc.a, 0.6f), sc.b, sc.a)
+        }
+    }
 
     private fun open(host: ToolHost) {
         val ui = host.ui
         val activity = host.activity
-        var mode = ThemeStore.mode
         var scheme = ThemeStore.scheme
         var lines = ThemeStore.lines
         var blur = ThemeStore.blur
@@ -347,8 +465,6 @@ object ThemeTool {
         box.setPadding(ui.dp(20), ui.dp(4), ui.dp(20), 0)
         val scroll = ScrollView(activity)
         scroll.addView(box)
-
-        val modeLabels = arrayOf("Sistem", "Açık", "Koyu")
 
         fun toggle(label: String, on: Boolean, onClick: () -> Unit): TextView =
             TextView(activity).apply {
@@ -362,77 +478,57 @@ object ThemeTool {
                 setOnClickListener { onClick() }
             }
 
+        var savedX = 0
+
         fun render() {
             box.removeAllViews()
-            val previewLight = ThemeStore.lightFor(activity, mode)
 
-            // Görünüm modu
-            box.addView(ui.noteText("Görünüm modu"))
-            val modeRow = LinearLayout(activity)
-            modeRow.orientation = LinearLayout.HORIZONTAL
-            modeRow.layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(8) }
-            modeLabels.forEachIndexed { i, label ->
-                val on = mode == i
-                modeRow.addView(TextView(activity).apply {
-                    text = label
-                    textSize = 14f
-                    gravity = Gravity.CENTER
-                    setTextColor(if (on) Color.WHITE else ui.color(R.color.vortex_text))
-                    background = ui.pillBackground(on)
-                    setPadding(ui.dp(6), ui.dp(12), ui.dp(6), ui.dp(12))
-                    layoutParams = LinearLayout.LayoutParams(0, WRAP, 1f).apply {
-                        if (i < 2) marginEnd = ui.dp(8)
-                    }
-                    setOnClickListener {
-                        mode = i
-                        render()
-                    }
-                })
-            }
-            box.addView(modeRow)
-
-            // Renk şeması (daireler)
-            box.addView(ui.noteText("Renk şeması"))
+            // Renk teması: üç parçalı daire kartları
+            box.addView(ui.noteText(tx("Renk teması", "Color theme")))
             val hs = HorizontalScrollView(activity)
             hs.isHorizontalScrollBarEnabled = false
-            hs.layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(8) }
+            hs.layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(10) }
             val row = LinearLayout(activity)
             row.orientation = LinearLayout.HORIZONTAL
-            for (i in ThemeStore.schemes.indices) {
-                if (i == ThemeStore.DYNAMIC && !ThemeStore.isDynamicAvailable()) continue
+            for (i in ThemeStore.visible) {
                 val sel = i == scheme
-                val pc = ThemeStore.previewColors(activity, i, previewLight)
+                val sw = swatch(activity, i)
 
-                val item = LinearLayout(activity)
-                item.orientation = LinearLayout.VERTICAL
-                item.gravity = Gravity.CENTER_HORIZONTAL
-                item.layoutParams = LinearLayout.LayoutParams(ui.dp(82), WRAP)
+                val tile = LinearLayout(activity)
+                tile.orientation = LinearLayout.VERTICAL
+                tile.gravity = Gravity.CENTER_HORIZONTAL
+                tile.setPadding(ui.dp(6), ui.dp(14), ui.dp(6), ui.dp(10))
+                tile.background = GradientDrawable().apply {
+                    setColor(ui.color(R.color.vortex_surface_light))
+                    cornerRadius = ui.dp(20).toFloat()
+                    if (sel) setStroke(ui.dp(2), ui.color(R.color.vortex_purple))
+                }
+                tile.layoutParams = LinearLayout.LayoutParams(ui.dp(100), WRAP).apply {
+                    marginStart = ui.dp(4)
+                    marginEnd = ui.dp(4)
+                }
 
                 val holder = FrameLayout(activity)
-                holder.layoutParams = LinearLayout.LayoutParams(ui.dp(62), ui.dp(62))
-                val circle = View(activity)
-                circle.background = GradientDrawable(
-                    GradientDrawable.Orientation.TL_BR, intArrayOf(pc[0], pc[1])
-                ).apply {
-                    shape = GradientDrawable.OVAL
-                    if (sel) setStroke(ui.dp(3), ui.color(R.color.vortex_text))
-                    else setStroke(ui.dp(1), Color.parseColor("#66808080"))
-                }
-                circle.layoutParams = FrameLayout.LayoutParams(MATCH, MATCH)
-                holder.addView(circle)
+                holder.layoutParams = LinearLayout.LayoutParams(ui.dp(64), ui.dp(64))
+                val sv = SwatchView(activity, sw[0], sw[1], sw[2])
+                sv.layoutParams = FrameLayout.LayoutParams(MATCH, MATCH)
+                holder.addView(sv)
                 if (sel) {
-                    holder.addView(TextView(activity).apply {
-                        text = "✓"
-                        textSize = 22f
-                        gravity = Gravity.CENTER
-                        setTextColor(Color.WHITE)
-                        setShadowLayer(6f, 0f, 0f, Color.BLACK)
-                        layoutParams = FrameLayout.LayoutParams(MATCH, MATCH)
-                    })
+                    val check = TextView(activity)
+                    check.text = "✓"
+                    check.textSize = 16f
+                    check.gravity = Gravity.CENTER
+                    check.setTextColor(readableOn(sw[2]))
+                    check.background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(sw[2])
+                    }
+                    check.layoutParams = FrameLayout.LayoutParams(ui.dp(28), ui.dp(28), Gravity.CENTER)
+                    holder.addView(check)
                 }
-                item.addView(holder)
-                item.addView(TextView(activity).apply {
-                    text = ThemeStore.displayName(i, previewLight)
+                tile.addView(holder)
+                tile.addView(TextView(activity).apply {
+                    text = ThemeStore.displayName(i, false)
                     textSize = 12f
                     gravity = Gravity.CENTER
                     maxLines = 2
@@ -440,32 +536,72 @@ object ThemeTool {
                         if (sel) ui.color(R.color.vortex_text) else ui.color(R.color.vortex_text_secondary)
                     )
                     if (sel) setTypeface(typeface, Typeface.BOLD)
-                    layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(6) }
+                    layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(8) }
                 })
-                item.setOnClickListener {
+                tile.setOnClickListener {
                     scheme = i
                     render()
                 }
-                row.addView(item)
+                row.addView(tile)
             }
             hs.addView(row)
             box.addView(hs)
 
-            if (scheme == ThemeStore.DYNAMIC) {
-                box.addView(ui.noteText("Renkler telefonunun duvar kağıdından alınır."))
+            // Sayfa noktaları (yana kaydırınca ilerler)
+            val pages = (ThemeStore.visible.size + 2) / 3
+            val dots = LinearLayout(activity)
+            dots.orientation = LinearLayout.HORIZONTAL
+            dots.gravity = Gravity.CENTER
+            dots.layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(10) }
+            val dotViews = ArrayList<View>()
+            for (p in 0 until pages) {
+                val d = View(activity)
+                d.layoutParams = LinearLayout.LayoutParams(ui.dp(8), ui.dp(8)).apply {
+                    marginStart = ui.dp(4)
+                    marginEnd = ui.dp(4)
+                }
+                dotViews.add(d)
+                dots.addView(d)
+            }
+            fun setDots(x: Int) {
+                val max = (row.width - hs.width).coerceAtLeast(1)
+                val page = ((x.toFloat() / max) * (pages - 1) + 0.5f).toInt().coerceIn(0, pages - 1)
+                for (p in dotViews.indices) {
+                    dotViews[p].background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(
+                            if (p == page) ui.color(R.color.vortex_purple)
+                            else ui.color(R.color.vortex_text_secondary)
+                        )
+                    }
+                }
+            }
+            hs.setOnScrollChangeListener { _, x, _, _, _ ->
+                savedX = x
+                setDots(x)
+            }
+            box.addView(dots)
+            hs.post {
+                hs.scrollTo(savedX, 0)
+                setDots(savedX)
             }
 
             box.addView(
-                toggle("Bulanık renk: ${if (blur) "Açık" else "Kapalı"}", blur) {
+                toggle(tx("Bulanık renk: ", "Blurred color: ") + (if (blur) tx("Açık", "On") else tx("Kapalı", "Off")), blur) {
                     blur = !blur
                     render()
                 }
             )
             box.addView(
-                ui.noteText("Zemine, seçtiğin renk şemasından yumuşak ve yayılmış renk lekeleri ekler.")
+                ui.noteText(
+                    tx(
+                        "Zemine, seçtiğin renk temasından yumuşak ve yayılmış renk lekeleri ekler.",
+                        "Adds soft, diffused color blobs from your chosen color theme to the background."
+                    )
+                )
             )
             box.addView(
-                toggle("Neon çizgileri: ${if (lines) "Açık" else "Kapalı"}", lines) {
+                toggle(tx("Neon çizgileri: ", "Neon lines: ") + (if (lines) tx("Açık", "On") else tx("Kapalı", "Off")), lines) {
                     lines = !lines
                     render()
                 }
@@ -480,17 +616,17 @@ object ThemeTool {
             android.R.style.Theme_Material_Dialog_Alert
         }
         val dialog = AlertDialog.Builder(activity, dialogTheme)
-            .setTitle("Görünüm")
+            .setTitle(tx("Görünüm", "Appearance"))
             .setView(scroll)
-            .setPositiveButton("Uygula") { _, _ ->
-                ThemeStore.mode = mode
+            .setPositiveButton(tx("Uygula", "Apply")) { _, _ ->
                 ThemeStore.scheme = scheme
+                ThemeStore.mode = if (scheme == ThemeStore.SNOW) 1 else 2
                 ThemeStore.lines = lines
                 ThemeStore.blur = blur
                 ThemeStore.save(activity)
                 activity.recreate()
             }
-            .setNegativeButton("Vazgeç", null)
+            .setNegativeButton(tx("Vazgeç", "Cancel"), null)
             .create()
         dialog.show()
         dialog.window?.setBackgroundDrawable(
@@ -503,5 +639,35 @@ object ThemeTool {
             ?.setTextColor(ui.color(R.color.vortex_purple))
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
             ?.setTextColor(ui.color(R.color.vortex_text_secondary))
+    }
+}
+
+// Üç parçalı renk dairesi (üst yarım, sol alt çeyrek, sağ alt çeyrek)
+private class SwatchView(
+    context: Context,
+    private val top: Int,
+    private val left: Int,
+    private val right: Int
+) : View(context) {
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val rect = RectF()
+
+    override fun onDraw(canvas: Canvas) {
+        val size = minOf(width, height).toFloat()
+        val l = (width - size) / 2f
+        val t = (height - size) / 2f
+        rect.set(l, t, l + size, t + size)
+        paint.style = Paint.Style.FILL
+        paint.color = top
+        canvas.drawArc(rect, 180f, 180f, true, paint)
+        paint.color = left
+        canvas.drawArc(rect, 90f, 90f, true, paint)
+        paint.color = right
+        canvas.drawArc(rect, 0f, 90f, true, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 2f
+        paint.color = Color.parseColor("#66808080")
+        canvas.drawCircle(l + size / 2f, t + size / 2f, size / 2f - 1f, paint)
     }
 }

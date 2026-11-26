@@ -26,9 +26,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Vortex"
+                    android:fontFamily="sans-serif-medium"
                     android:textColor="@color/vortex_purple"
-                    android:textSize="34sp"
-                    android:textStyle="bold"/>
+                    android:textSize="26sp"/>
 
                 <TextView
                     android:id="@+id/statusText"
@@ -153,8 +153,8 @@
                 android:contentDescription="Ana Sayfa"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingBottom="6dp"
-                android:paddingTop="6dp">
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp">
 
                 <ImageView
                     android:id="@+id/iconHome"
@@ -172,8 +172,8 @@
                 android:contentDescription="Ara"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingBottom="6dp"
-                android:paddingTop="6dp">
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp">
 
                 <ImageView
                     android:id="@+id/iconSearch"
@@ -191,8 +191,8 @@
                 android:contentDescription="Kütüphane"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingBottom="6dp"
-                android:paddingTop="6dp">
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp">
 
                 <ImageView
                     android:id="@+id/iconLibrary"
@@ -210,8 +210,8 @@
                 android:contentDescription="İndirilenler"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingBottom="6dp"
-                android:paddingTop="6dp">
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp">
 
                 <ImageView
                     android:id="@+id/iconDownloads"
@@ -247,30 +247,68 @@
             android:layout_height="260dp"
             android:layout_marginTop="8dp"/>
 
-        <TextView
-            android:id="@+id/npTitle"
+        <LinearLayout
+            android:id="@+id/npTitleRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text="Çalan şarkı yok"
-            android:textColor="@color/vortex_text"
-            android:textSize="24sp"
-            android:textStyle="bold"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/npArtist"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text=""
-            android:textColor="@color/vortex_text_secondary"
-            android:textSize="15sp"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/npTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="start"
+                    android:singleLine="true"
+                    android:text="Çalan şarkı yok"
+                    android:textColor="@color/vortex_text"
+                    android:textSize="22sp"/>
+
+                <TextView
+                    android:id="@+id/npArtist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:ellipsize="end"
+                    android:gravity="start"
+                    android:singleLine="true"
+                    android:text=""
+                    android:textColor="@color/vortex_text_secondary"
+                    android:textSize="15sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cellLike"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/npLikeIcon"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="11dp"/>
+
+                <TextView
+                    android:id="@+id/npLikeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Beğen"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </LinearLayout>
 
         <SeekBar
             android:id="@+id/npSeek"
@@ -308,171 +346,115 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/npPrev"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:padding="16dp"/>
-
-            <ImageView
-                android:id="@+id/npPlayPause"
-                android:layout_width="76dp"
-                android:layout_height="76dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginStart="16dp"
-                android:padding="22dp"/>
-
-            <ImageView
-                android:id="@+id/npNext"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:padding="16dp"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:id="@+id/cellLike"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp"
-                android:paddingTop="4dp">
-
-                <ImageView
-                    android:id="@+id/npLikeIcon"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:padding="12dp"/>
-
-                <TextView
-                    android:id="@+id/npLikeLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Beğen"
-                    android:textColor="@color/vortex_text_secondary"
-                    android:textSize="11sp"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/cellFolder"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp"
-                android:paddingTop="4dp">
-
-                <ImageView
-                    android:id="@+id/npFolderIcon"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:padding="12dp"/>
-
-                <TextView
-                    android:id="@+id/npFolderLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Klasör"
-                    android:textColor="@color/vortex_text_secondary"
-                    android:textSize="11sp"/>
-            </LinearLayout>
-
             <LinearLayout
                 android:id="@+id/cellShuffle"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp"
-                android:paddingTop="4dp">
+                android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/npShuffleIcon"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:padding="12dp"/>
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:padding="13dp"/>
 
                 <TextView
                     android:id="@+id/npShuffleLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
                     android:text="Karıştır"
-                    android:textColor="@color/vortex_text_secondary"
-                    android:textSize="11sp"/>
+                    android:visibility="gone"/>
             </LinearLayout>
+
+            <ImageView
+                android:id="@+id/npPrev"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="6dp"
+                android:padding="16dp"/>
+
+            <ImageView
+                android:id="@+id/npPlayPause"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:padding="24dp"/>
+
+            <ImageView
+                android:id="@+id/npNext"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="6dp"
+                android:padding="16dp"/>
 
             <LinearLayout
                 android:id="@+id/cellRepeat"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp"
-                android:paddingTop="4dp">
+                android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/npRepeatIcon"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:padding="12dp"/>
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:padding="13dp"/>
 
                 <TextView
                     android:id="@+id/npRepeatLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
                     android:text="Döngü"
-                    android:textColor="@color/vortex_text_secondary"
-                    android:textSize="11sp"/>
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/cellFolder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/npFolderIcon"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"/>
+
+                <TextView
+                    android:id="@+id/npFolderLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Klasör"/>
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/cellSpeed"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp"
-                android:paddingTop="4dp">
+                android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/npSpeedIcon"
                     android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:padding="12dp"/>
+                    android:layout_height="44dp"/>
 
                 <TextView
                     android:id="@+id/npSpeedLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="1.0x"
-                    android:textColor="@color/vortex_text_secondary"
-                    android:textSize="11sp"/>
+                    android:text="1.0x"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

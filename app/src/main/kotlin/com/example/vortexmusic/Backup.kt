@@ -42,13 +42,19 @@ object BackupTool {
 
     fun entries(host: ToolHost): List<ToolEntry> = listOf(
         ToolEntry(
-            "Yedekle",
-            "Beğeniler, klasörler, sözler, kapaklar, sıralamalar, ses ve görünüm ayarları",
+            tx("Yedekle", "Back up"),
+            tx(
+                "Beğeniler, klasörler, sözler, kapaklar, sıralamalar, ses ve görünüm ayarları",
+                "Likes, folders, lyrics, covers, orderings, audio and appearance settings"
+            ),
             IconDrawable.DOWNLOAD
         ) { export(host) },
         ToolEntry(
-            "Geri yükle",
-            "Bir Vortex yedek dosyasından verilerini geri getir (aynı telefonda)",
+            tx("Geri yükle", "Restore"),
+            tx(
+                "Bir Vortex yedek dosyasından verilerini geri getir (aynı telefonda)",
+                "Bring your data back from a Vortex backup file (on the same phone)"
+            ),
             IconDrawable.REPEAT
         ) { import(host) }
     )
@@ -59,7 +65,7 @@ object BackupTool {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
             .addCategory(Intent.CATEGORY_OPENABLE)
             .setType("application/json")
-            .putExtra(Intent.EXTRA_TITLE, "vortex-yedek-$stamp.json")
+            .putExtra(Intent.EXTRA_TITLE, tx("vortex-yedek-$stamp.json", "vortex-backup-$stamp.json"))
         host.activity.startActivityForResult(intent, REQ_EXPORT)
     }
 
@@ -180,12 +186,17 @@ object BackupTool {
                 it.write(json.toByteArray(Charsets.UTF_8))
             }
             if (art == null) {
-                host.ui.toast("Yedek kaydedildi (kapaklar çok yer tuttuğu için dahil edilmedi)")
+                host.ui.toast(
+                    tx(
+                        "Yedek kaydedildi (kapaklar çok yer tuttuğu için dahil edilmedi)",
+                        "Backup saved (covers were left out because they take too much space)"
+                    )
+                )
             } else {
-                host.ui.toast("Yedek kaydedildi")
+                host.ui.toast(tx("Yedek kaydedildi", "Backup saved"))
             }
         } catch (e: Exception) {
-            host.ui.toast("Yedek yazılamadı")
+            host.ui.toast(tx("Yedek yazılamadı", "Could not write the backup"))
         }
     }
 
@@ -336,27 +347,31 @@ object BackupTool {
     private fun readBackup(host: ToolHost, uri: Uri) {
         val text = readLimited(host, uri)
         if (text == null) {
-            host.ui.toast("Dosya okunamadı ya da çok büyük")
+            host.ui.toast(tx("Dosya okunamadı ya da çok büyük", "The file could not be read or is too large"))
             return
         }
         val data = parse(text)
         if (data == null) {
-            host.ui.toast("Geçerli bir Vortex yedeği değil")
+            host.ui.toast(tx("Geçerli bir Vortex yedeği değil", "Not a valid Vortex backup"))
             return
         }
         AlertDialog.Builder(host.activity)
-            .setTitle("Yedek geri yüklensin mi?")
+            .setTitle(tx("Yedek geri yüklensin mi?", "Restore this backup?"))
             .setMessage(
-                "Mevcut beğeniler, klasörler, sözler, kapaklar, sıralamalar, ses ve görünüm ayarları " +
-                    "yedektekilerle değiştirilecek. Çalan müzik durur ve uygulama yenilenir."
+                tx(
+                    "Mevcut beğeniler, klasörler, sözler, kapaklar, sıralamalar, ses ve görünüm ayarları " +
+                        "yedektekilerle değiştirilecek. Çalan müzik durur ve uygulama yenilenir.",
+                    "Your current likes, folders, lyrics, covers, orderings, audio and appearance settings " +
+                        "will be replaced with the ones in the backup. Playback stops and the app refreshes."
+                )
             )
-            .setPositiveButton("Geri yükle") { _, _ ->
+            .setPositiveButton(tx("Geri yükle", "Restore")) { _, _ ->
                 apply(host.activity, data)
                 host.restartService()
-                host.ui.toast("Yedek geri yüklendi")
+                host.ui.toast(tx("Yedek geri yüklendi", "Backup restored"))
                 host.activity.recreate()
             }
-            .setNegativeButton("Vazgeç", null)
+            .setNegativeButton(tx("Vazgeç", "Cancel"), null)
             .show()
     }
 }

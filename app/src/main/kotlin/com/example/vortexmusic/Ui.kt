@@ -54,9 +54,9 @@ class Ui(val activity: Activity) {
         val m = (s % 3600) / 60
         val sec = s % 60
         return when {
-            h > 0 -> "$h sa $m dk"
-            m > 0 -> "$m dk $sec sn"
-            else -> "$sec sn"
+            h > 0 -> tx("$h sa $m dk", "$h h $m min")
+            m > 0 -> tx("$m dk $sec sn", "$m min $sec s")
+            else -> tx("$sec sn", "$sec s")
         }
     }
 
@@ -88,7 +88,10 @@ class Ui(val activity: Activity) {
         val colors = if (ThemeStore.mono() && !ThemeStore.light) {
             intArrayOf(Color.parseColor("#5C5C68"), Color.parseColor("#3E3E48"))
         } else {
-            intArrayOf(color(R.color.vortex_purple), color(R.color.vortex_blue))
+            intArrayOf(
+                color(R.color.vortex_purple),
+                mix(color(R.color.vortex_purple), color(R.color.vortex_blue), 0.18f)
+            )
         }
         val g = GradientDrawable(GradientDrawable.Orientation.TL_BR, colors)
         if (oval) g.shape = GradientDrawable.OVAL else g.cornerRadius = dp(radiusDp).toFloat()
@@ -141,15 +144,15 @@ class Ui(val activity: Activity) {
 
     fun sectionTitle(label: String): TextView = TextView(activity).apply {
         text = label
-        textSize = 16f
-        setTypeface(typeface, Typeface.BOLD)
+        textSize = 19f
+        typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         setTextColor(color(R.color.vortex_text))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            topMargin = dp(22)
-            bottomMargin = dp(8)
+            topMargin = dp(28)
+            bottomMargin = dp(10)
         }
     }
 

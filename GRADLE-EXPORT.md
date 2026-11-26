@@ -8,8 +8,8 @@ ever run: open it in Android Studio (or run `gradle build`) and expect to adjust
 
 - Android Gradle plugin 8.13.0
 - Kotlin 2.4.0
-- Gradle 8.13 (the wrapper properties are here; the `gradlew` scripts are not,
-  so run `gradle wrapper` once or let Android Studio do it)
+- Gradle 8.13, through the wrapper included here (`./gradlew build`; on Linux or
+  macOS run `chmod +x gradlew` first, since a zip keeps no executable bit)
 
 Kotlin is pinned to the version CodeAssist compiled this project with, so the sources
 build the same way there. It is newer than the D8/R8 this AGP bundles, which warns

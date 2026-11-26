@@ -10,21 +10,29 @@ object SmartLists {
     const val FORGOTTEN = 3
     const val RECENT = 4
 
-    val titles = arrayOf(
-        "En çok dinlenen",
-        "Son eklenen",
-        "Hiç dinlenmeyen",
-        "Unutulanlar",
-        "Son çalınan"
-    )
+    val titles: Array<String>
+        get() = arrayOf(
+            tx("En çok dinlenen", "Most played"),
+            tx("Son eklenen", "Recently added"),
+            tx("Hiç dinlenmeyen", "Never played"),
+            tx("Unutulanlar", "Forgotten"),
+            tx("Son çalınan", "Recently played")
+        )
 
-    val hints = arrayOf(
-        "En az 20 sn dinlediğin şarkılar, çalma sayısına göre.",
-        "Telefona en son eklenenler.",
-        "Henüz hiç çalmadığın şarkılar.",
-        "Bir zamanlar dinleyip 14 günden uzun süredir açmadıkların. Kayıt biriktikçe dolar.",
-        "Geçmişin: en son çaldıkların."
-    )
+    val hints: Array<String>
+        get() = arrayOf(
+            tx(
+                "En az 20 sn dinlediğin şarkılar, çalma sayısına göre.",
+                "Songs you listened to for at least 20 s, by play count."
+            ),
+            tx("Telefona en son eklenenler.", "The newest additions to your phone."),
+            tx("Henüz hiç çalmadığın şarkılar.", "Songs you have not played yet."),
+            tx(
+                "Bir zamanlar dinleyip 14 günden uzun süredir açmadıkların. Kayıt biriktikçe dolar.",
+                "Songs you once played but have not opened for over 14 days. Fills up as history builds."
+            ),
+            tx("Geçmişin: en son çaldıkların.", "Your history: what you played most recently.")
+        )
 
     private const val DAY_MS = 24L * 3600L * 1000L
     private const val LIMIT = 100

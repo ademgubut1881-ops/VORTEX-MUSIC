@@ -227,7 +227,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         scroll.isVerticalScrollBarEnabled = false
         scroll.layoutParams = LinearLayout.LayoutParams(mp, 0, 1f).apply { topMargin = ui.dp(8) }
         scroll.addView(content)
-        view.addView(ui.header("İstatistikler") { hide() })
+        view.addView(ui.header(tx("İstatistikler", "Statistics")) { hide() })
         view.addView(scroll)
     }
 
@@ -256,7 +256,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
     private fun dayLabel(key: String): String {
         return try {
             val d = SimpleDateFormat("yyyyMMdd", Locale.US).parse(key)
-            if (d == null) key else SimpleDateFormat("d MMM", Locale.forLanguageTag("tr")).format(d)
+            if (d == null) key else SimpleDateFormat("d MMM", I18n.locale()).format(d)
         } catch (e: Exception) {
             key
         }
@@ -267,7 +267,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         setPadding(ui.dp(18), ui.dp(16), ui.dp(18), ui.dp(16))
         background = GradientDrawable().apply {
             setColor(ui.color(R.color.vortex_surface))
-            cornerRadius = ui.dp(22).toFloat()
+            cornerRadius = ui.dp(28).toFloat()
         }
         layoutParams = LinearLayout.LayoutParams(mp, wc).apply { topMargin = ui.dp(12) }
     }
@@ -276,7 +276,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         val row = LinearLayout(ui.activity)
         row.orientation = LinearLayout.HORIZONTAL
         row.layoutParams = LinearLayout.LayoutParams(mp, wc).apply { topMargin = ui.dp(4) }
-        val labels = arrayOf("Bugün", "Hafta", "Ay", "Tümü")
+        val labels = arrayOf(tx("Bugün", "Today"), tx("Hafta", "Week"), tx("Ay", "Month"), tx("Tümü", "All"))
         labels.forEachIndexed { i, l ->
             row.addView(TextView(ui.activity).apply {
                 text = l
@@ -369,8 +369,8 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         top.addView(TextView(ui.activity).apply {
             text = "$rank"
             textSize = 14f
-            setTypeface(typeface, Typeface.BOLD)
-            setTextColor(ui.color(R.color.vortex_blue))
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            setTextColor(ui.color(R.color.vortex_purple))
             layoutParams = LinearLayout.LayoutParams(ui.dp(26), wc)
         })
 
@@ -468,7 +468,12 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         val total = songMs.values.sum()
         if (total <= 0L) {
             content.addView(
-                ui.noteText("Henüz dinleme kaydı yok. Bir şarkı çaldıkça ve duraklattıkça burada görünür.")
+                ui.noteText(
+                    tx(
+                        "Henüz dinleme kaydı yok. Bir şarkı çaldıkça ve duraklattıkça burada görünür.",
+                        "No listening history yet. It shows up here as you play and pause songs."
+                    )
+                )
             )
             return
         }
@@ -477,12 +482,12 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         val summary = card()
         summary.addView(TextView(ui.activity).apply {
             text = ui.fmtLong(total)
-            textSize = 32f
-            setTypeface(typeface, Typeface.BOLD)
+            textSize = 34f
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             setTextColor(ui.color(R.color.vortex_text))
         })
-        var line = "${songMs.size} farklı şarkı"
-        if (range == 3 && plays > 0) line += " · $plays çalma"
+        var line = tx("${songMs.size} farklı şarkı", if (songMs.size == 1) "1 different song" else "${songMs.size} different songs")
+        if (range == 3 && plays > 0) line += tx(" · $plays çalma", if (plays == 1) " · 1 play" else " · $plays plays")
         summary.addView(TextView(ui.activity).apply {
             text = line
             textSize = 14f
@@ -490,7 +495,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         })
         if (daysBack > 1) {
             summary.addView(TextView(ui.activity).apply {
-                text = "Günlük ortalama: " + ui.fmtLong(total / daysBack)
+                text = tx("Günlük ortalama: ", "Daily average: ") + ui.fmtLong(total / daysBack)
                 textSize = 13f
                 setTextColor(ui.color(R.color.vortex_text_secondary))
                 setPadding(0, ui.dp(4), 0, 0)
@@ -504,7 +509,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
             val keys = dayKeys(n)
             val values = keys.map { dayMs[it] ?: 0L }
             if (values.any { it > 0L }) {
-                content.addView(ui.sectionTitle(if (n == 7) "Son 7 gün" else "Son 30 gün"))
+                content.addView(ui.sectionTitle(if (n == 7) tx("Son 7 gün", "Last 7 days") else tx("Son 30 gün", "Last 30 days")))
                 val c = card()
                 c.addView(
                     SmoothLineView(
@@ -518,12 +523,12 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
                         layoutParams = LinearLayout.LayoutParams(mp, ui.dp(150))
                     }
                 )
-                c.addView(labelRow(dayLabel(keys.first()), "Bugün"))
+                c.addView(labelRow(dayLabel(keys.first()), tx("Bugün", "Today")))
                 var peakIdx = 0
                 for (i in values.indices) if (values[i] > values[peakIdx]) peakIdx = i
                 c.addView(
                     ui.noteText(
-                        "En yoğun gün: ${dayLabel(keys[peakIdx])} · ${ui.fmtLong(values[peakIdx])}"
+                        tx("En yoğun gün: ", "Busiest day: ") + "${dayLabel(keys[peakIdx])} · ${ui.fmtLong(values[peakIdx])}"
                     )
                 )
                 content.addView(c)
@@ -541,7 +546,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
         val sortedArtists = artistMs.entries.sortedByDescending { it.value }
         val artistTotal = sortedArtists.sumOf { it.value }
         if (artistTotal > 0L) {
-            content.addView(ui.sectionTitle("Sanatçılar"))
+            content.addView(ui.sectionTitle(tx("Sanatçılar", "Artists")))
             val c = card()
             val palette = donutColors()
             val other = ui.mix(
@@ -570,7 +575,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
                 val share = restMs.toFloat() / artistTotal.toFloat()
                 shares.add(share)
                 colors.add(other)
-                legend.addView(legendRow(other, "Diğer", "${Math.round(share * 100f)}%"))
+                legend.addView(legendRow(other, tx("Diğer", "Other"), "${Math.round(share * 100f)}%"))
             }
 
             val row = LinearLayout(ui.activity)
@@ -595,11 +600,11 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
                 text = ui.fmtLong(artistTotal)
                 textSize = 14f
                 gravity = Gravity.CENTER
-                setTypeface(typeface, Typeface.BOLD)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 setTextColor(ui.color(R.color.vortex_text))
             })
             center.addView(TextView(ui.activity).apply {
-                text = "toplam"
+                text = tx("toplam", "total")
                 textSize = 11f
                 gravity = Gravity.CENTER
                 setTextColor(ui.color(R.color.vortex_text_secondary))
@@ -614,7 +619,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
 
         // Saat grafiği
         if (hourMs.any { it > 0L }) {
-            content.addView(ui.sectionTitle("Günün saatleri (tüm zamanlar)"))
+            content.addView(ui.sectionTitle(tx("Günün saatleri (tüm zamanlar)", "Hours of the day (all time)")))
             val c = card()
             var peak = 0
             for (h in 0 until 24) if (hourMs[h] > hourMs[peak]) peak = h
@@ -633,7 +638,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
                 }
             )
             c.addView(labelRow("00:00", "23:00"))
-            c.addView(ui.noteText("En çok dinlediğin saat: %02d:00".format(peak)))
+            c.addView(ui.noteText(tx("En çok dinlediğin saat: ", "Peak listening hour: ") + "%02d:00".format(peak)))
             content.addView(c)
         }
 
@@ -646,7 +651,7 @@ class StatsScreen(private val ui: Ui, private val songsProvider: () -> List<Song
             }
             .take(10)
         if (topSongs.isNotEmpty()) {
-            content.addView(ui.sectionTitle("En çok dinlenen şarkılar"))
+            content.addView(ui.sectionTitle(tx("En çok dinlenen şarkılar", "Most played songs")))
             val c = card()
             val max = topSongs[0].third
             topSongs.forEachIndexed { i, t ->

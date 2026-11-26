@@ -28,6 +28,8 @@ object Tools {
         BackupTool.install(host)
         DuplicatesTool.install(host)
         LyricsTool.install(host)
+        AudioTestTool.install(host)
+        PrivateLibrary.install(host)
     }
 
     fun entries(host: ToolHost): List<ToolEntry> {
@@ -35,7 +37,9 @@ object Tools {
         list.addAll(ThemeTool.entries(host))
         list.addAll(LyricsTool.entries(host))
         list.addAll(DuplicatesTool.entries(host))
+        list.addAll(PrivateLibrary.entries(host))
         list.addAll(BackupTool.entries(host))
+        list.addAll(AudioTestTool.entries(host))
         return list
     }
 }

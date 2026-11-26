@@ -1,5 +1,4 @@
 package io.github.vortexmusic.player
-import com.example.vortexmusic.R
 
 import android.app.Dialog
 import android.content.Context
@@ -34,23 +33,24 @@ object ListPrefs {
     const val S_SHUFFLE = 13
     const val S_MANUAL = 14
 
-    val sortLabels = arrayOf(
-        "Varsayılan sıra",
-        "Başlığa göre",
-        "Sanatçıya göre",
-        "Albüme göre",
-        "Parça numarasına göre",
-        "Dosya ismine göre",
-        "Yola göre",
-        "Yıla göre",
-        "Kitaplığa ekleme tarihine göre",
-        "Değiştirme tarihine göre",
-        "Süreye göre",
-        "Son çalma zamanına göre",
-        "Çalma sayısına göre",
-        "Karışık sıraya göre",
-        "Elle sıralama (benim sıram)"
-    )
+    val sortLabels: Array<String>
+        get() = arrayOf(
+            tx("Varsayılan sıra", "Default order"),
+            tx("Başlığa göre", "By title"),
+            tx("Sanatçıya göre", "By artist"),
+            tx("Albüme göre", "By album"),
+            tx("Parça numarasına göre", "By track number"),
+            tx("Dosya ismine göre", "By file name"),
+            tx("Yola göre", "By path"),
+            tx("Yıla göre", "By year"),
+            tx("Kitaplığa ekleme tarihine göre", "By date added"),
+            tx("Değiştirme tarihine göre", "By date modified"),
+            tx("Süreye göre", "By duration"),
+            tx("Son çalma zamanına göre", "By last played"),
+            tx("Çalma sayısına göre", "By play count"),
+            tx("Karışık sıraya göre", "Shuffled"),
+            tx("Elle sıralama (benim sıram)", "Manual order (my order)")
+        )
 
     const val L_LIST = 0
     const val L_COMPACT = 1
@@ -59,14 +59,15 @@ object ListPrefs {
     const val L_GRID3 = 4
     const val L_GRID2 = 5
 
-    val layoutLabels = arrayOf(
-        "Liste",
-        "Liste - kompakt",
-        "Liste - küçük",
-        "Liste - resim yok",
-        "Izgara - küçük",
-        "Izgara"
-    )
+    val layoutLabels: Array<String>
+        get() = arrayOf(
+            tx("Liste", "List"),
+            tx("Liste - kompakt", "List - compact"),
+            tx("Liste - küçük", "List - small"),
+            tx("Liste - resim yok", "List - no images"),
+            tx("Izgara - küçük", "Grid - small"),
+            tx("Izgara", "Grid")
+        )
 
     class Opts(var sort: Int, var reverse: Boolean, var titlesOnly: Boolean, var layout: Int)
 
@@ -140,7 +141,7 @@ object ListPrefs {
         return Pair(last, cnt)
     }
 
-    private fun norm(s: String): String = SongSearch.normalize(s)
+    private fun norm(s: String): String = SmartSort.key(s)
 
     fun ordered(ctx: Context, key: String, list: List<Song>, o: Opts): List<Song> {
         var out: List<Song> = when (o.sort) {
@@ -211,7 +212,7 @@ object ListOptionsDialog {
         }
 
         val heading = TextView(activity).apply {
-            text = "Liste seçenekleri: $title"
+            text = tx("Liste seçenekleri: $title", "List options: $title")
             textSize = 18f
             setTypeface(typeface, Typeface.BOLD)
             setTextColor(textColor)
@@ -262,7 +263,7 @@ object ListOptionsDialog {
             onChanged()
         }
 
-        section("Sırala")
+        section(tx("Sırala", "Sort"))
         for (i in ListPrefs.sortLabels.indices) {
             addRow(ListPrefs.sortLabels[i], false, { opts.sort == i }) {
                 opts.sort = i
@@ -270,18 +271,18 @@ object ListOptionsDialog {
                 persist()
             }
         }
-        addRow("Ters", true, { opts.reverse }) {
+        addRow(tx("Ters", "Reverse"), true, { opts.reverse }) {
             opts.reverse = !opts.reverse
             persist()
         }
 
-        section("Düzen")
-        addRow("Sadece başlıkları göster", true, { opts.titlesOnly }) {
+        section(tx("Düzen", "Layout"))
+        addRow(tx("Sadece başlıkları göster", "Show titles only"), true, { opts.titlesOnly }) {
             opts.titlesOnly = !opts.titlesOnly
             persist()
         }
 
-        section("Görünüm")
+        section(tx("Görünüm", "View"))
         for (i in ListPrefs.layoutLabels.indices) {
             addRow(ListPrefs.layoutLabels[i], false, { opts.layout == i }) {
                 opts.layout = i
@@ -290,8 +291,12 @@ object ListOptionsDialog {
         }
 
         box.addView(TextView(activity).apply {
-            text = "Elle sıralamada satırlarda ↑ ↓ düğmeleri çıkar, uzun basınca \"En üste / En alta taşı\" seçilir. " +
-                "Sıralama sadece uygulamada saklanır, dosyalarına dokunulmaz."
+            text = tx(
+                "Elle sıralamada satırlarda ↑ ↓ düğmeleri çıkar, uzun basınca \"En üste / En alta taşı\" seçilir. " +
+                    "Sıralama sadece uygulamada saklanır, dosyalarına dokunulmaz.",
+                "In manual order, rows get ↑ ↓ buttons and a long press offers \"Move to top / bottom\". " +
+                    "The order is stored only in the app; your files are not touched."
+            )
             textSize = 12f
             setTextColor(secondary)
             setPadding(0, ui.dp(14), 0, ui.dp(4))
@@ -300,7 +305,7 @@ object ListOptionsDialog {
         for (f in refreshers) f()
 
         sheet.addView(TextView(activity).apply {
-            text = "Kapat"
+            text = tx("Kapat", "Close")
             textSize = 14f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)

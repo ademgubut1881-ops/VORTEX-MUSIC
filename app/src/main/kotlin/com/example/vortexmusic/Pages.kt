@@ -159,11 +159,38 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
 
     private val ui: Ui get() = host.ui
     private var homeFilter = 0
-    private val homeChips = arrayOf("Tümü", "Beğenilenler", "Yeniler", "Unutulanlar")
+    private val homeChips = arrayOf(
+        tx("Tümü", "All"), tx("Beğenilenler", "Liked"), tx("Yeniler", "New"), tx("Unutulanlar", "Forgotten")
+    )
     private val homeKinds = intArrayOf(-1, -2, SmartLists.RECENTLY_ADDED, SmartLists.FORGOTTEN)
 
     private class Quick(val title: String, val kind: Int, val song: Song?, val action: () -> Unit)
     private class Browse(val title: String, val kind: Int, val view: Int, val smart: Int)
+
+    // Material 3 tarzı: tonlu yüzey (zemin + vurgu karışımı) ve orta kalınlık yazı
+    private fun tonal(amount: Float): Int {
+        val base = ui.color(R.color.vortex_surface)
+        val acc = ui.color(R.color.vortex_purple)
+        val a = amount
+        return Color.rgb(
+            (Color.red(base) * (1 - a) + Color.red(acc) * a).toInt(),
+            (Color.green(base) * (1 - a) + Color.green(acc) * a).toInt(),
+            (Color.blue(base) * (1 - a) + Color.blue(acc) * a).toInt()
+        )
+    }
+
+    private fun medium(): Typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+
+    private fun sectionHeader(t: String): TextView = TextView(ui.activity).apply {
+        text = t
+        textSize = 19f
+        typeface = medium()
+        setTextColor(ui.color(R.color.vortex_text))
+        layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply {
+            topMargin = ui.dp(28)
+            bottomMargin = ui.dp(10)
+        }
+    }
 
     private fun label(t: String, size: Float, colorId: Int, bold: Boolean = false): TextView =
         TextView(ui.activity).apply {
@@ -188,10 +215,20 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
             row.addView(TextView(ui.activity).apply {
                 text = l
                 textSize = 14f
-                setPadding(ui.dp(16), ui.dp(8), ui.dp(16), ui.dp(8))
-                setTextColor(if (i == selected) Color.WHITE else ui.color(R.color.vortex_text))
-                background = ui.pillBackground(i == selected)
-                layoutParams = LinearLayout.LayoutParams(WRAP, WRAP).apply { marginEnd = ui.dp(8) }
+                typeface = medium()
+                gravity = Gravity.CENTER
+                setPadding(ui.dp(16), 0, ui.dp(16), 0)
+                setTextColor(ui.color(R.color.vortex_text))
+                background = GradientDrawable().apply {
+                    cornerRadius = ui.dp(10).toFloat()
+                    if (i == selected) {
+                        setColor(tonal(0.32f))
+                    } else {
+                        setColor(Color.TRANSPARENT)
+                        setStroke(ui.dp(1), (ui.color(R.color.vortex_text_secondary) and 0x00FFFFFF) or 0x66000000)
+                    }
+                }
+                layoutParams = LinearLayout.LayoutParams(WRAP, ui.dp(36)).apply { marginEnd = ui.dp(8) }
                 setOnClickListener { onSelect(i) }
             })
         }
@@ -209,10 +246,15 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
             }
             layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(12) }
         }
-        card.addView(label("Müzik izni gerekli", 18f, R.color.vortex_text, true))
-        card.addView(ui.noteText("Şarkılarını listeleyebilmem için müzik ve ses dosyalarına erişim izni ver."))
+        card.addView(label(tx("Müzik izni gerekli", "Music permission needed"), 18f, R.color.vortex_text, true))
+        card.addView(ui.noteText(
+            tx(
+                "Şarkılarını listeleyebilmem için müzik ve ses dosyalarına erişim izni ver.",
+                "Allow access to music and audio files so I can list your songs."
+            )
+        ))
         card.addView(TextView(ui.activity).apply {
-            text = "İzin ver"
+            text = tx("İzin ver", "Allow")
             textSize = 15f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
@@ -229,15 +271,15 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
     private fun greeting(): View {
         val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         val hello = when (h) {
-            in 5..11 -> "Günaydın"
-            in 12..17 -> "İyi günler"
-            in 18..22 -> "İyi akşamlar"
-            else -> "İyi geceler"
+            in 5..11 -> tx("Günaydın", "Good morning")
+            in 12..17 -> tx("İyi günler", "Good afternoon")
+            in 18..22 -> tx("İyi akşamlar", "Good evening")
+            else -> tx("İyi geceler", "Good night")
         }
         return TextView(ui.activity).apply {
             text = hello
-            textSize = 26f
-            setTypeface(typeface, Typeface.BOLD)
+            textSize = 24f
+            typeface = medium()
             setTextColor(ui.color(R.color.vortex_text))
             layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(4) }
         }
@@ -249,7 +291,7 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
             gravity = Gravity.CENTER_VERTICAL
             background = GradientDrawable().apply {
                 setColor(ui.color(R.color.vortex_surface))
-                cornerRadius = ui.dp(14).toFloat()
+                cornerRadius = ui.dp(16).toFloat()
             }
             isClickable = true
             setOnClickListener { q.action() }
@@ -258,18 +300,21 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
         img.layoutParams = LinearLayout.LayoutParams(ui.dp(56), ui.dp(56))
         val song = q.song
         if (song != null) {
-            host.setCover(img, song, ui.dp(56), 14, 24)
+            host.setCover(img, song, ui.dp(56), 16, 24)
         } else {
-            img.background = ui.neonGradient(false, 14)
+            img.background = GradientDrawable().apply {
+                setColor(tonal(0.38f))
+                cornerRadius = ui.dp(16).toFloat()
+            }
             img.setPadding(ui.dp(16), ui.dp(16), ui.dp(16), ui.dp(16))
-            img.setImageDrawable(ui.icon(q.kind, Color.WHITE, 24))
+            img.setImageDrawable(ui.icon(q.kind, ui.color(R.color.vortex_text), 24))
         }
         val t = TextView(ui.activity).apply {
             text = q.title
             textSize = 13f
             maxLines = 2
             ellipsize = TextUtils.TruncateAt.END
-            setTypeface(typeface, Typeface.BOLD)
+            typeface = medium()
             setTextColor(ui.color(R.color.vortex_text))
             setPadding(ui.dp(10), 0, ui.dp(8), 0)
             layoutParams = LinearLayout.LayoutParams(0, WRAP, 1f)
@@ -308,8 +353,9 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
         }
         val cover = ImageView(ui.activity)
         cover.layoutParams = LinearLayout.LayoutParams(w, w)
-        host.setCover(cover, coverSong, w, 18, 40)
+        host.setCover(cover, coverSong, w, 16, 40)
         val t = label(title, 14f, R.color.vortex_text)
+        t.typeface = medium()
         t.layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = ui.dp(8) }
         box.addView(cover)
         box.addView(t)
@@ -359,12 +405,17 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
             return
         }
         if (!host.loaded) {
-            content.addView(ui.noteText("Şarkılar yükleniyor..."))
+            content.addView(ui.noteText(tx("Şarkılar yükleniyor...", "Loading songs...")))
             return
         }
         val songs = host.songs()
         if (songs.isEmpty()) {
-            content.addView(ui.noteText("Telefonda müzik bulunamadı. Müzik ekleyince burada görünür."))
+            content.addView(ui.noteText(
+                tx(
+                    "Telefonda müzik bulunamadı. Müzik ekleyince burada görünür.",
+                    "No music found on this phone. It will show up here once you add some."
+                )
+            ))
             return
         }
         content.addView(greeting())
@@ -376,7 +427,10 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
         if (homeFilter != 0) {
             val list = if (homeFilter == 1) host.likedSongs() else host.songsFor(homeKinds[homeFilter])
             if (list.isEmpty()) {
-                val hint = if (homeFilter == 1) "Henüz beğenilen şarkı yok. Tam ekran çalarda kalbe dokunarak ekleyebilirsin."
+                val hint = if (homeFilter == 1) tx(
+                    "Henüz beğenilen şarkı yok. Tam ekran çalarda kalbe dokunarak ekleyebilirsin.",
+                    "No liked songs yet. Tap the heart in the full-screen player to add some."
+                )
                 else SmartLists.hints[homeKinds[homeFilter]]
                 content.addView(ui.noteText(hint))
             } else {
@@ -389,8 +443,8 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
 
         // Hızlı erişim: 2 özel kutu + son çalınan (yoksa son eklenen) 4 şarkı
         val quick = ArrayList<Quick>()
-        quick.add(Quick("Beğenilenler", IconDrawable.HEART, null) { host.openLibrary(1, -1) })
-        quick.add(Quick("Tüm şarkılar", IconDrawable.NOTE, null) { host.openLibrary(10, -1) })
+        quick.add(Quick(tx("Beğenilenler", "Liked songs"), IconDrawable.HEART, null) { host.openLibrary(1, -1) })
+        quick.add(Quick(tx("Tüm şarkılar", "All songs"), IconDrawable.NOTE, null) { host.openLibrary(10, -1) })
         var recent = host.songsFor(SmartLists.RECENT).take(4)
         if (recent.isEmpty()) recent = host.songsFor(SmartLists.RECENTLY_ADDED).take(4)
         recent.forEachIndexed { i, s -> quick.add(Quick(s.title, IconDrawable.NOTE, s) { host.playList(recent, i) }) }
@@ -405,25 +459,28 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
         for (kind in order) {
             val list = host.songsFor(kind).take(12)
             if (list.isEmpty()) continue
-            content.addView(ui.sectionTitle(SmartLists.titles[kind]))
+            content.addView(sectionHeader(SmartLists.titles[kind]))
             content.addView(songCards(list))
         }
         val albums = songs.groupBy { it.album }.toList().sortedBy { it.first.lowercase() }.take(12)
         if (albums.isNotEmpty()) {
-            content.addView(ui.sectionTitle("Albümlerin"))
+            content.addView(sectionHeader(tx("Albümlerin", "Your albums")))
             content.addView(cardRow(albums.map { (name, list) ->
                 card(list.first(), name, list.first().artist) { host.openGroup(5, name) }
             }))
         }
         content.addView(TextView(ui.activity).apply {
-            text = "Tüm şarkıları gör"
+            text = tx("Tüm şarkıları gör", "See all songs")
             textSize = 14f
+            typeface = medium()
             gravity = Gravity.CENTER
             setTextColor(ui.color(R.color.vortex_text))
-            background = ui.pillBackground(false)
-            setPadding(ui.dp(16), ui.dp(12), ui.dp(16), ui.dp(12))
-            layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply {
-                topMargin = ui.dp(24)
+            background = GradientDrawable().apply {
+                setColor(tonal(0.22f))
+                cornerRadius = ui.dp(24).toFloat()
+            }
+            layoutParams = LinearLayout.LayoutParams(MATCH, ui.dp(48)).apply {
+                topMargin = ui.dp(28)
                 bottomMargin = ui.dp(8)
             }
             setOnClickListener { host.openLibrary(10, -1) }
@@ -459,17 +516,19 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
         val c = LinearLayout(ui.activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(ui.dp(14), ui.dp(12), ui.dp(14), ui.dp(12))
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR, browseColors(index))
-                .apply { cornerRadius = ui.dp(18).toFloat() }
+            background = GradientDrawable().apply {
+                setColor(tonal(if (index % 2 == 0) 0.20f else 0.14f))
+                cornerRadius = ui.dp(16).toFloat()
+            }
             isClickable = true
             setOnClickListener { host.openLibrary(item.view, item.smart) }
         }
         val ic = ImageView(ui.activity).apply {
-            setImageDrawable(ui.icon(item.kind, Color.WHITE, 22))
+            setImageDrawable(ui.icon(item.kind, ui.color(R.color.vortex_text), 22))
             layoutParams = LinearLayout.LayoutParams(ui.dp(22), ui.dp(22))
         }
-        val t = label(item.title, 15f, R.color.vortex_text, true)
-        t.setTextColor(Color.WHITE)
+        val t = label(item.title, 15f, R.color.vortex_text)
+        t.typeface = medium()
         c.addView(ic)
         c.addView(View(ui.activity), LinearLayout.LayoutParams(1, 0, 1f))
         c.addView(t)
@@ -515,12 +574,12 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
         }
         val recents = RecentSearches.load(ui.activity)
         if (recents.isNotEmpty()) {
-            val title = ui.sectionTitle("Son aramalar")
+            val title = sectionHeader(tx("Son aramalar", "Recent searches"))
             (title.layoutParams as LinearLayout.LayoutParams).topMargin = ui.dp(8)
             content.addView(title)
             for (q in recents) content.addView(recentRow(q))
             content.addView(TextView(ui.activity).apply {
-                text = "Son aramaları temizle"
+                text = tx("Son aramaları temizle", "Clear recent searches")
                 textSize = 13f
                 gravity = Gravity.CENTER
                 setTextColor(ui.color(R.color.vortex_text))
@@ -536,16 +595,16 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
                 }
             })
         }
-        content.addView(ui.sectionTitle("Gözat"))
+        content.addView(sectionHeader(tx("Gözat", "Browse")))
         val items = listOf(
-            Browse("Tüm şarkılar", IconDrawable.NOTE, 10, -1),
-            Browse("Beğenilenler", IconDrawable.HEART, 1, -1),
-            Browse("Son eklenenler", IconDrawable.PLUS, 0, SmartLists.RECENTLY_ADDED),
-            Browse("En çok dinlenen", IconDrawable.CHART, 0, SmartLists.MOST_PLAYED),
-            Browse("Unutulanlar", IconDrawable.REPEAT, 0, SmartLists.FORGOTTEN),
-            Browse("Klasörler", IconDrawable.FOLDER, 6, -1),
-            Browse("Sanatçılar", IconDrawable.ARTIST, 2, -1),
-            Browse("Albümler", IconDrawable.DISC, 4, -1)
+            Browse(tx("Tüm şarkılar", "All songs"), IconDrawable.NOTE, 10, -1),
+            Browse(tx("Beğenilenler", "Liked songs"), IconDrawable.HEART, 1, -1),
+            Browse(tx("Son eklenenler", "Recently added"), IconDrawable.PLUS, 0, SmartLists.RECENTLY_ADDED),
+            Browse(tx("En çok dinlenen", "Most played"), IconDrawable.CHART, 0, SmartLists.MOST_PLAYED),
+            Browse(tx("Unutulanlar", "Forgotten"), IconDrawable.REPEAT, 0, SmartLists.FORGOTTEN),
+            Browse(tx("Klasörler", "Folders"), IconDrawable.FOLDER, 6, -1),
+            Browse(tx("Sanatçılar", "Artists"), IconDrawable.ARTIST, 2, -1),
+            Browse(tx("Albümler", "Albums"), IconDrawable.DISC, 4, -1)
         )
         var i = 0
         while (i < items.size) {
@@ -585,11 +644,15 @@ class Pages(private val host: PageHost, private val content: LinearLayout) {
             setImageDrawable(ui.icon(IconDrawable.DOWNLOAD, Color.WHITE, 28))
             layoutParams = LinearLayout.LayoutParams(ui.dp(56), ui.dp(56))
         }
-        val title = label("İndirilenler", 20f, R.color.vortex_text, true)
+        val title = label(tx("İndirilenler", "Downloads"), 20f, R.color.vortex_text, true)
         title.layoutParams = LinearLayout.LayoutParams(WRAP, WRAP).apply { topMargin = ui.dp(14) }
         val body = TextView(ui.activity).apply {
-            text = "Çevrimdışı dinlemek için indirdiğin şarkılar burada görünecek. " +
-                "İndirme özelliği Beta 3'te açılacak. Şimdilik telefonundaki müzikler Kütüphane'de."
+            text = tx(
+                "Çevrimdışı dinlemek için indirdiğin şarkılar burada görünecek. " +
+                    "İndirme özelliği Beta 3'te açılacak. Şimdilik telefonundaki müzikler Kütüphane'de.",
+                "Songs you download for offline listening will appear here. " +
+                    "Downloads will arrive in Beta 3. For now, the music on your phone is in the Library."
+            )
             textSize = 14f
             setTextColor(ui.color(R.color.vortex_text_secondary))
             layoutParams = LinearLayout.LayoutParams(WRAP, WRAP).apply { topMargin = ui.dp(6) }

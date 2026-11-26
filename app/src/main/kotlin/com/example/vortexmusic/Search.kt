@@ -11,8 +11,16 @@ object SongSearch {
     const val SORT_AZ = 1
     const val SORT_NEWEST = 2
 
-    val scopeLabels = arrayOf("Hepsi", "Şarkı", "Sanatçı", "Albüm")
-    val sortLabels = arrayOf("En uygun", "A-Z", "Yeni")
+    val scopeLabels: Array<String>
+        get() = arrayOf(
+            tx("Hepsi", "All"),
+            tx("Şarkı", "Song"),
+            tx("Sanatçı", "Artist"),
+            tx("Albüm", "Album")
+        )
+
+    val sortLabels: Array<String>
+        get() = arrayOf(tx("En uygun", "Best match"), "A-Z", tx("Yeni", "Newest"))
 
     // Türkçe harfleri ve büyük/küçük harfi yok sayar
     fun normalize(text: String): String {
